@@ -952,28 +952,25 @@ const CATNAME=Object.fromEntries(NCATS);
 const CANVAS_PRESETS=[['Personalizado',0,0],['Cuadrado 1080×1080',1080,1080],['Vertical 4:5 · 1080×1350',1080,1350],['Historia 9:16 · 1080×1920',1080,1920],['Horizontal 16:9 · 1920×1080',1920,1080],['Miniatura de video · 1280×720',1280,720],['Banner 3:1 · 1500×500',1500,500],['Portada web · 1200×630',1200,630],['Foto 3:2 · 1800×1200',1800,1200],['Foto 4:3 · 1600×1200',1600,1200],['A4 a 300 ppp · 2480×3508',2480,3508]];
 const GFONTS=[['Inter','300;400;500;700;900'],['Roboto','300;400;500;700;900'],['Montserrat','300;400;500;700;900'],['Poppins','300;400;500;700;900'],['Rubik','300;400;500;700;900'],['Space Grotesk','300;400;500;700'],['Familjen Grotesk','400;500;700'],['Oswald','300;400;500;700'],['Bebas Neue',''],['Anton',''],['Archivo Black',''],['Bungee',''],['Black Ops One',''],['Playfair Display','400;500;700;900'],['Lora','400;500;700'],['Merriweather','300;400;700;900'],['Abril Fatface',''],['IBM Plex Mono','300;400;500;700'],['Space Mono','400;700'],['VT323',''],['Press Start 2P',''],['Permanent Marker',''],['Caveat','400;500;700'],['Pacifico',''],['Lobster','']];
 const NT={
- image:{name:'Imagen',cat:'basicos',desc:'Carga una imagen y la funde sobre un fondo opcional',inputs:[{k:'base',l:'Fondo'}],image:true,
-  params:[S('fit','Ajuste',['Estirar','Cubrir','Contener'],1),R('zoom','Zoom',1,6,1,.01,'×'),R('ox','Mover X',-1,1,0,.01),R('oy','Mover Y',-1,1,0,.01),S('mode','Fusión',BLEND_NAMES),R('opacity','Opacidad',0,1,1,.01)],
+ image:{name:'Imagen',cat:'basicos',desc:'Carga una imagen a su tamaño original. Para escalarla o moverla usá Transformar; para combinarla, Mezclar',inputs:[],image:true,
+  params:[],
   glsl:`uniform vec2 u_isz;
-  vec4 node(vec2 uv){vec3 base=u_has0==1?texture(u_t0,uv).rgb:vec3(0.);if(u_hasimg==0)return vec4(base,1.);
-   float a=u_res.x/u_res.y,b=u_isz.x/u_isz.y;vec2 sp=vec2(1.);int fit=int(p_fit+.5);
-   if(fit==1){if(a>b)sp.y=b/a;else sp.x=a/b;}
-   else if(fit==2){if(a>b)sp.x=a/b;else sp.y=b/a;}
-   sp/=max(p_zoom,.01);vec2 q=(uv-.5)*sp+.5+vec2(p_ox,p_oy)*max(1.-sp,0.)*.5;
-   vec4 im=texture(u_img,q);float inside=(q.x>=0.&&q.x<=1.&&q.y>=0.&&q.y<=1.)?1.:0.;
-   float al=im.a*inside*p_opacity;return vec4(mix(base,blendMode(base,im.rgb,int(p_mode+.5)),al),1.);}`},
+  vec4 node(vec2 uv){if(u_hasimg==0)return vec4(0.);vec2 q=(uv-.5)*(u_res/max(u_scale,1e-4))/u_isz+.5;
+   if(q.x<0.||q.x>1.||q.y<0.||q.y>1.)return vec4(0.);return texture(u_img,q);}`},
  color:{name:'Color',cat:'basicos',desc:'Un color plano',inputs:[],params:[C('color','Color','#e2508f')],
   glsl:`vec4 node(vec2 uv){return vec4(p_color,1.);}`},
- gradient:{name:'Degradado',cat:'basicos',desc:'Lineal o radial entre dos colores',inputs:[],
-  params:[S('type','Tipo',['Lineal','Radial']),C('c1','Color A','#1d1b4f'),C('c2','Color B','#ffb86b'),R('angle','Ángulo',0,360,90,1,'°'),R('mid','Punto medio',.05,.95,.5,.01)],
+ gradient:{name:'Degradado',cat:'basicos',desc:'Lineal, radial o rombo entre dos colores',inputs:[],
+  params:[S('type','Tipo',['Lineal','Radial','Rombo (diamante)']),C('c1','Color A','#1d1b4f'),C('c2','Color B','#ffb86b'),R('angle','Ángulo',0,360,90,1,'°'),R('mid','Punto medio',.05,.95,.5,.01)],
   glsl:`vec4 node(vec2 uv){float asp=u_res.x/u_res.y;vec2 p=(uv-.5)*vec2(asp,1.);float t;
    if(p_type<.5){float a=radians(p_angle);vec2 d=vec2(cos(a),sin(a));float ext=abs(d.x)*asp*.5+abs(d.y)*.5;t=dot(p,d)/ext*.5+.5;}
-   else t=length(p)/(.5*length(vec2(asp,1.)));
+   else if(p_type<1.5)t=length(p)/(.5*length(vec2(asp,1.)));
+   else{vec2 r=rot(p,radians(p_angle-90.));t=(abs(r.x)+abs(r.y))/(.5*(asp+1.));}
    t=clamp(t,0.,1.);t=t<p_mid?t/p_mid*.5:.5+(t-p_mid)/(1.-p_mid)*.5;return vec4(mix(p_c1,p_c2,t),1.);}`},
- blend:{name:'Mezclar',cat:'basicos',desc:'Funde dos entradas con modo, opacidad y máscara',inputs:[{k:'a',l:'Fondo'},{k:'b',l:'Frente'},{k:'mask',l:'Máscara',mask:1}],
-  params:[S('mode','Fusión',BLEND_NAMES,1),R('opacity','Opacidad',0,1,1,.01)],
-  glsl:`vec4 node(vec2 uv){vec3 a=texture(u_t0,uv).rgb;if(u_has1==0)return vec4(a,1.);vec3 b=texture(u_t1,uv).rgb;
-   float m=p_opacity;if(u_has2==1)m*=luma(texture(u_t2,uv).rgb);return vec4(mix(a,blendMode(a,b,int(p_mode+.5)),m),1.);}`},
+ blend:{name:'Mezclar',cat:'basicos',desc:'Funde un frente sobre un fondo, con modo, opacidad, escala, posición y máscara',inputs:[{k:'a',l:'Fondo'},{k:'b',l:'Frente'},{k:'mask',l:'Máscara',mask:1}],
+  params:[S('mode','Fusión',BLEND_NAMES,0),R('opacity','Opacidad',0,1,1,.01),R('scale','Escala del frente',.05,4,1,.01,'×'),R('tx','Mover X',-1,1,0,.005),R('ty','Mover Y',-1,1,0,.005)],
+  glsl:`vec4 node(vec2 uv){vec4 A=texture(u_t0,uv);vec3 a=u_has0==1?A.rgb:vec3(0.);float aa=u_has0==1?A.a:0.;if(u_has1==0)return vec4(a,u_has0==1?aa:1.);
+   vec2 q=(uv-.5-vec2(p_tx,p_ty))/max(p_scale,1e-3)+.5;float ins=(q.x>=0.&&q.x<=1.&&q.y>=0.&&q.y<=1.)?1.:0.;vec4 B=texture(u_t1,clamp(q,0.,1.));
+   float m=p_opacity*B.a*ins;if(u_has2==1)m*=luma(texture(u_t2,uv).rgb);return vec4(mix(a,blendMode(a,B.rgb,int(p_mode+.5)),m),max(aa,m));}`},
  lumamask:{name:'Máscara de luminancia',cat:'basicos',desc:'Convierte tonos en una máscara blanco y negro',inputs:[{k:'in',l:'Entrada'}],
   params:[R('low','Negro hasta',0,1,.25,.01),R('high','Blanco desde',0,1,.75,.01),B('inv','Invertir')],
   glsl:`vec4 node(vec2 uv){float l=luma(texture(u_t0,uv).rgb);float lo=min(p_low,p_high-.002);l=ss(lo,max(p_high,lo+.002),l);if(p_inv>.5)l=1.-l;return vec4(vec3(l),1.);}`},
@@ -1004,7 +1001,7 @@ const NT={
  transform:{name:'Transformar',cat:'basicos',desc:'Escala, rota, mueve o repite',inputs:[{k:'in',l:'Entrada'}],
   params:[R('scale','Escala',.1,4,1,.01),R('rot','Rotación',-180,180,0,1,'°'),R('tx','Mover X',-1,1,0,.005),R('ty','Mover Y',-1,1,0,.005),B('tile','Repetir'),B('flip','Espejar')],
   glsl:`vec4 node(vec2 uv){float asp=u_res.x/u_res.y;vec2 p=(uv-.5-vec2(p_tx,p_ty))*vec2(asp,1.);p=rot(p,-radians(p_rot))/p_scale;p.x/=asp;p+=.5;if(p_flip>.5)p.x=1.-p.x;
-   if(p_tile>.5)p=fract(p);else if(p.x<0.||p.x>1.||p.y<0.||p.y>1.)return vec4(0.,0.,0.,1.);return vec4(texture(u_t0,p).rgb,1.);}`},
+   if(p_tile>.5)p=fract(p);else if(p.x<0.||p.x>1.||p.y<0.||p.y>1.)return vec4(0.);return texture(u_t0,p);}`},
 
  p_stripes:{name:'Rayas',cat:'patrones',desc:'Franjas paralelas',inputs:[],params:[R('size','Tamaño',4,400,40,1,'px'),R('angle','Ángulo',0,180,0,1,'°'),R('thick','Grosor',.02,.98,.5,.01),C('c1','Color A','#1c1b19'),C('c2','Color B','#ece6d8')],
   glsl:`vec4 node(vec2 uv){vec2 q=rot((uv-.5)*u_res/u_scale,radians(p_angle))/max(p_size,1.);float aa=length(fwidth(q))*.75+1e-4;float d=abs(fract(q.x)-.5)*2.;float m=1.-ss(p_thick-aa*2.,p_thick+aa*2.,d);return vec4(mix(p_c2,p_c1,m),1.);}`},
@@ -1159,7 +1156,7 @@ vec3 blendMode(vec3 a,vec3 b,int m){
 const FMAIN=`
 void main(){vec4 c=fx(v_uv);if(u_last==1){float m=u_mix;if(u_hasMask==1)m*=luma(texture(u_mask,v_uv).rgb);c.rgb=mix(texture(u_in,v_uv).rgb,c.rgb,m);}o=vec4(clamp(c.rgb,0.,1.),1.);}`;
 const NMAIN=`
-void main(){o=vec4(clamp(node(v_uv).rgb,0.,1.),1.);}`;
+void main(){o=clamp(node(v_uv),0.,1.);}`;
 function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const log=gl.getShaderInfoLog(s);gl.deleteShader(s);throw new Error(log);}return s;}
 let vsObj=null;
