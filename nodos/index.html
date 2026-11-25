@@ -1222,7 +1222,7 @@ function connect(from,to,port){if(from===to)return false;if(reaches(to,from)){to
   G.edges=G.edges.filter(e=>!(e.to===to&&e.port===port));G.edges.push({from,to,port});return true;}
 const outputNode=()=>G.nodes.find(n=>n.type==='output');
 function primaryImageNode(){const s=byId(sel);if(s&&s.type==='image')return s;return G.nodes.filter(n=>n.type==='image').sort((a,b)=>a.uid-b.uid)[0]||null;}
-function docSize(){const cn=G.nodes.filter(n=>n.type==='canvas').sort((a,b)=>a.uid-b.uid)[0];if(cn)return{w:Math.max(16,Math.round(+cn.params.w)||1080),h:Math.max(16,Math.round(+cn.params.h)||1080)};for(const n of [...G.nodes].sort((a,b)=>a.uid-b.uid)){if(n.type==='image'){const im=images.get(n.uid);if(im)return{w:im.w,h:im.h};}}return{w:1600,h:1066};}
+function docSize(){const on=G.nodes.find(n=>n.type==='output');const cn=G.nodes.filter(n=>n.type==='canvas'&&on&&reaches(n.uid,on.uid)).sort((a,b)=>a.uid-b.uid)[0];if(cn)return{w:Math.max(16,Math.round(+cn.params.w)||1080),h:Math.max(16,Math.round(+cn.params.h)||1080)};for(const n of [...G.nodes].sort((a,b)=>a.uid-b.uid)){if(n.type==='image'){const im=images.get(n.uid);if(im)return{w:im.w,h:im.h};}}return{w:1600,h:1066};}
 
 /* Evalúa el subgrafo que llega a `target`. keepAll conserva todas las salidas (miniaturas). */
 let readBuf=null;
@@ -1502,6 +1502,9 @@ function renderThumbs(){
     if(c.width!==TW||c.height!==TH){c.width=TW;c.height=TH;}
     const img=new ImageData(TW,TH);for(let y=0;y<TH;y++)img.data.set(thumbBuf.subarray((TH-1-y)*TW*4,(TH-y)*TW*4),y*TW*4);
     c.getContext('2d').putImageData(img,0,0);});
+  /* La ficha Imagen muestra la foto completa, aunque el lienzo la recorte */
+  G.nodes.forEach(n=>{if(n.type!=='image'||n.bypass)return;const r=images.get(n.uid),c=world.querySelector(`.node[data-uid="${n.uid}"] canvas.thumb`);if(!r||!r.src||!c)return;
+    const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,c.width,c.height);const k=Math.min(c.width/r.w,c.height/r.h),w=r.w*k,h=r.h*k;x.drawImage(r.src,(c.width-w)/2,(c.height-h)/2,w,h);});
   releaseAll(memo);trimPool(false);
   requestAnimationFrame(drawWires);
 }
