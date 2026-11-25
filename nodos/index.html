@@ -967,7 +967,7 @@ function errDiffuse(px,W,H,p,scale){
    Tipos de nodo
    ============================================================ */
 const BLEND_NAMES=['Normal','Multiplicar','Pantalla','Superponer','Luz suave','Luz fuerte','Aclarar','Oscurecer','Diferencia','Sumar','Restar','Sobreexponer color','Subexponer color','Color','Luminosidad'];
-const NCATS=[['basicos','Básicos'],['patrones','Patrones'],['texturas','Texturas'],['impreso','Impreso'],['pantalla','Pantalla'],['textil','Textil'],['analogico','Analógico'],['general','General'],['distorsion','Distorsionar']];
+const NCATS=[['basicos','Básicos'],['patrones','Patrones'],['texturas','Texturas'],['impreso','Impreso'],['pantalla','Pantalla'],['textil','Textil'],['analogico','Analógico'],['general','General'],['distorsion','Transformar']];
 const CATNAME=Object.fromEntries(NCATS);
 const CANVAS_PRESETS=[['Personalizado',0,0],['Cuadrado 1080×1080',1080,1080],['Vertical 4:5 · 1080×1350',1080,1350],['Historia 9:16 · 1080×1920',1080,1920],['Horizontal 16:9 · 1920×1080',1920,1080],['Miniatura de video · 1280×720',1280,720],['Banner 3:1 · 1500×500',1500,500],['Portada web · 1200×630',1200,630],['Foto 3:2 · 1800×1200',1800,1200],['Foto 4:3 · 1600×1200',1600,1200],['A4 a 300 ppp · 2480×3508',2480,3508]];
 const GFONTS=[['Inter','300;400;500;700;900'],['Roboto','300;400;500;700;900'],['Montserrat','300;400;500;700;900'],['Poppins','300;400;500;700;900'],['Rubik','300;400;500;700;900'],['Space Grotesk','300;400;500;700'],['Familjen Grotesk','400;500;700'],['Oswald','300;400;500;700'],['Bebas Neue',''],['Anton',''],['Archivo Black',''],['Bungee',''],['Black Ops One',''],['Playfair Display','400;500;700;900'],['Lora','400;500;700'],['Merriweather','300;400;700;900'],['Abril Fatface',''],['IBM Plex Mono','300;400;500;700'],['Space Mono','400;700'],['VT323',''],['Press Start 2P',''],['Permanent Marker',''],['Caveat','400;500;700'],['Pacifico',''],['Lobster','']];
@@ -1019,9 +1019,23 @@ const NT={
    float e=clamp(length(vec2(gx,gy))*p_gain*.25,0.,1.);vec3 c=p_color>.5?texture(u_t0,uv).rgb*e:vec3(e);
    if(p_inv>.5)c=p_color>.5?mix(vec3(1.),texture(u_t0,uv).rgb,e):vec3(1.-e);return vec4(c,1.);}`},
  transform:{name:'Transformar',cat:'basicos',desc:'Escala, rota, mueve o repite',inputs:[{k:'in',l:'Entrada'}],
-  params:[R('scale','Escala',.1,4,1,.01),R('rot','Rotación',-180,180,0,1,'°'),R('tx','Mover X',-1,1,0,.005),R('ty','Mover Y',-1,1,0,.005),B('tile','Repetir'),B('flip','Espejar')],
-  glsl:`vec4 node(vec2 uv){float asp=u_res.x/u_res.y;vec2 p=(uv-.5-vec2(p_tx,p_ty))*vec2(asp,1.);p=rot(p,-radians(p_rot))/p_scale;p.x/=asp;p+=.5;if(p_flip>.5)p.x=1.-p.x;
-   if(p_tile>.5)p=fract(p);else if(p.x<0.||p.x>1.||p.y<0.||p.y>1.)return vec4(0.);return texture(u_t0,p);}`},
+  params:[R('scale','Escala',.1,4,1,.01),R('rot','Rotación',-180,180,0,1,'°'),R('tx','Mover X',-1,1,0,.005),R('ty','Mover Y',-1,1,0,.005),B('tile','Repetir'),B('flip','Espejar'),S('interp','Remuestreo',['Vecino más próximo','Bilineal','Alta calidad'],2)],
+  glsl:`vec4 smp(vec2 p){vec2 R=u_res;if(p_tile>.5)p=fract(p);int m=int(p_interp+.5);
+   if(m==0)return texelFetch(u_t0,clamp(ivec2(floor(p*R)),ivec2(0),ivec2(R)-1),0);
+   if(m==1)return texture(u_t0,p);
+   /* bicúbico (Catmull-Rom con 9 lecturas bilineales) */
+   vec2 sp=p*R-.5,f=fract(sp),t=floor(sp)+.5;vec2 w0=f*(-.5+f*(1.-.5*f)),w1=1.+f*f*(-2.5+1.5*f),w2=f*(.5+f*(2.-1.5*f)),w3=f*f*(-.5+.5*f);
+   vec2 w12=w1+w2,o12=w2/w12;vec2 t0=(t-1.)/R,t3=(t+2.)/R,t12=(t+o12)/R;
+   vec4 c=texture(u_t0,vec2(t0.x,t0.y))*w0.x*w0.y+texture(u_t0,vec2(t12.x,t0.y))*w12.x*w0.y+texture(u_t0,vec2(t3.x,t0.y))*w3.x*w0.y
+     +texture(u_t0,vec2(t0.x,t12.y))*w0.x*w12.y+texture(u_t0,vec2(t12.x,t12.y))*w12.x*w12.y+texture(u_t0,vec2(t3.x,t12.y))*w3.x*w12.y
+     +texture(u_t0,vec2(t0.x,t3.y))*w0.x*w3.y+texture(u_t0,vec2(t12.x,t3.y))*w12.x*w3.y+texture(u_t0,vec2(t3.x,t3.y))*w3.x*w3.y;return clamp(c,0.,1.);}
+  vec2 mapP(vec2 uv){float asp=u_res.x/u_res.y;vec2 p=(uv-.5-vec2(p_tx,p_ty))*vec2(asp,1.);p=rot(p,-radians(p_rot))/p_scale;p.x/=asp;p+=.5;if(p_flip>.5)p.x=1.-p.x;return p;}
+  bool outside(vec2 p){return p_tile<.5&&(p.x<0.||p.x>1.||p.y<0.||p.y>1.);}
+  vec4 node(vec2 uv){vec2 p=mapP(uv);
+   /* al achicar, alta calidad promedia varias muestras dentro de cada píxel (reducción por pasos) */
+   if(int(p_interp+.5)==2&&p_scale<.99){int n=int(clamp(ceil(1./p_scale),2.,4.));vec4 a=vec4(0.);
+     for(int j=0;j<4;j++)for(int i=0;i<4;i++){if(i>=n||j>=n)continue;vec2 q=mapP(uv+((vec2(i,j)+.5)/float(n)-.5)/u_res);if(!outside(q))a+=texture(u_t0,p_tile>.5?fract(q):q);}return a/float(n*n);}
+   if(outside(p))return vec4(0.);return smp(p);}`},
 
  p_stripes:{name:'Rayas',cat:'patrones',desc:'Franjas paralelas',inputs:[],params:[R('size','Tamaño',4,400,40,1,'px'),R('angle','Ángulo',0,180,0,1,'°'),R('thick','Grosor',.02,.98,.5,.01),C('c1','Color A','#1c1b19'),C('c2','Color B','#ece6d8')],
   glsl:`vec4 node(vec2 uv){vec2 q=rot((uv-.5)*u_res/u_scale,radians(p_angle))/max(p_size,1.);float aa=length(fwidth(q))*.75+1e-4;float d=abs(fract(q.x)-.5)*2.;float m=1.-ss(p_thick-aa*2.,p_thick+aa*2.,d);return vec4(mix(p_c2,p_c1,m),1.);}`},
@@ -1104,7 +1118,7 @@ const NT={
   vec4 node(vec2 uv){vec3 base=u_has0==1?texture(u_t0,uv).rgb:p_bg;vec4 pt=u_hasimg==1?texture(u_img,uv):vec4(0.);float a=pt.a*p_opacity;int m=int(p_mode+.5);
   if(m==1){float v=p_inv>.5?1.-a:a;if(u_ov>.5)return vec4(mix(base*.8+.1,vec3(1.,.22,.3),v*.65),1.);return vec4(vec3(v),1.);}
   if(m==2)base=p_bg;return vec4(mix(base,pt.rgb,a),1.);}`},
- canvas:{name:'Lienzo',cat:'basicos',desc:'Define el tamaño en píxeles de lo que sigue después. Lo que entra se centra a tamaño real: lo que sobra se recorta y lo que falta se rellena con el fondo',inputs:[{k:'in',l:'Entrada'}],
+ canvas:{name:'Recortar',cat:'basicos',desc:'Fija el tamaño en píxeles de lo que sigue después. Lo que entra queda centrado a tamaño real: lo que sobra se recorta y lo que falta se rellena con el fondo',inputs:[{k:'in',l:'Entrada'}],
   params:[S('preset','Formato',CANVAS_PRESETS.map(x=>x[0]),0),N('w','Ancho',1080,16,8192,'px'),N('h','Alto',1080,16,8192,'px'),C('bg','Fondo vacío','#000000')],
   onParam(P,k){if(k==='preset'){const pr=CANVAS_PRESETS[+P.preset];if(pr&&pr[1]){P.w=pr[1];P.h=pr[2];return true;}}else if(k==='w'||k==='h'){const i=CANVAS_PRESETS.findIndex(x=>x[1]===+P.w&&x[2]===+P.h);const np=i>0?i:0;if(np!==+P.preset){P.preset=np;return true;}}},
   glsl:`vec4 node(vec2 uv){if(u_has0==0)return vec4(p_bg,1.);vec4 c=texture(u_t0,uv);return vec4(mix(p_bg,c.rgb,c.a),1.);}`},
@@ -1125,10 +1139,10 @@ const NT={
 FILTERS.forEach(f=>{NT[f.id]={name:f.name,cat:['posterize','threshold','chmixer','selective','recolor'].includes(f.id)?'basicos':f.cat,desc:f.desc,filter:f,inputs:[{k:'in',l:'Entrada'},{k:'mask',l:'Máscara',mask:1}],
   params:[R('_mix','Intensidad',0,1,1,.01)].concat(f.params)};});
 /* Reorganización de la biblioteca: por función y no por origen */
-const NGROUPS=[['Herramientas',[['entrada','Entrada'],['color','Ajustes'],['composicion','Composición'],['desenfoque','Efectos'],['distorsion','Distorsionar']]],
+const NGROUPS=[['Herramientas',[['entrada','Entrada'],['color','Ajustes'],['composicion','Composición'],['desenfoque','Efectos'],['distorsion','Transformar']]],
  ['Generar',[['patrones','Patrones'],['texturas','Texturas']]],
  ['Estilos',[['impreso','Impreso'],['pantalla','Pantalla'],['textil','Textil'],['analogico','Analógico'],['artistico','Artístico']]]];
-const RECAT={image:'entrada',canvas:'entrada',text:'entrada',border:'desenfoque',paint:'entrada',color:'entrada',gradient:'entrada',output:'entrada',reroute:'composicion',
+const RECAT={image:'entrada',canvas:'distorsion',text:'entrada',border:'desenfoque',paint:'entrada',color:'entrada',gradient:'entrada',output:'entrada',reroute:'composicion',
  blend:'composicion',lumamask:'composicion',channel:'composicion',merge:'composicion',edges:'desenfoque',transform:'distorsion',
  invert:'color',levels:'color',oil:'artistico',hsl:'color',posterize:'color',threshold:'color',chmixer:'color',selective:'color',recolor:'color',adjust:'color',curves:'color',gradmap:'color'};
 Object.entries(NT).forEach(([k,T])=>{if(RECAT[k])T.cat=RECAT[k];else if(T.cat==='general')T.cat='desenfoque';});
