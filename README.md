@@ -31,9 +31,9 @@ python3 -m http.server 8000
 ## Qué trae
 
 **Modo nodos** (la biblioteca está agrupada por función en un acordeón, con colores cian para herramientas, magenta para patrones y texturas, y amarillo para estilos)
-- **Entrada:** Imagen (ajuste cubrir/contener, zoom y mover para elegir el recorte; 15 modos de fusión y opacidad), Lienzo (fija el tamaño final en px, con formatos comunes), Texto (con fuentes de Google Fonts), Pintura (pincel, goma, lazo, balde y cuentagotas sobre la vista previa; sale como color o como máscara), Color, Degradado y Salida.
+- **Entrada:** Imagen (carga a tamaño original; se escala o mueve con Transformar y se combina con Mezclar), Lienzo (fija el tamaño final en px, con formatos comunes), Texto (con fuentes de Google Fonts), Pintura (pincel, goma, lazo, balde y cuentagotas sobre la vista previa; sale como color o como máscara), Color, Degradado (lineal, radial o rombo) y Salida.
 - **Ajustes:** Ajustes, Curvas (general y por canal), Mapa de degradado, Niveles, Tono y saturación, Invertir, Posterizar, Umbral, Mezclador de canales, Corrección selectiva y Reemplazar colores (posteriza y asigna colores desde una rueda con armonías).
-- **Composición:** Mezclar, Máscara de luminancia, Separar y Unir canales y Desvío.
+- **Composición:** Mezclar (modo, opacidad, escala y posición del frente), Máscara de luminancia, Separar y Unir canales y Desvío.
 - **Efectos:** Borde (marco plano o degradado), Detectar bordes, desenfoque gaussiano, de movimiento y radial, Brillo (bloom), Ruido, Nitidez y Viñeta.
 - **Distorsionar:** Transformar, remolino, coordenadas polares, esferizar, inflar, encoger, lente, fruncir, emborronar, ondas, onda senoidal, turbulencia, caleidoscopio, cizalla, espejo, mosaico repetido y desplazar con mapa.
 - **Patrones** y **Texturas:** rayas, damero, lunares, grilla, ondas, zigzag, ladrillos, panal, rombos, círculos, triángulos, tartán, pata de gallo y espiga; ruido, nubes, celular, madera, mármol, papel, papel arrugado, lienzo, hormigón, cartón, grunge y polvo y rayas.
