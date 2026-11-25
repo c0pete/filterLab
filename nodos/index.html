@@ -51,7 +51,20 @@ header.top{grid-area:top;display:flex;align-items:center;gap:10px;flex-wrap:wrap
 .vtabs button[aria-selected="true"]{background:var(--panel-2);color:var(--fg);box-shadow:0 0 0 1px var(--line)}
 .cfgname{display:none;font:500 12px var(--f-mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22ch}
 .libview{display:none;flex:1;min-height:0;overflow:auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
-.app.libmode #graph{display:none}.app.libmode .libview{display:block}.app.libmode #gpane>.pbar>:not(#viewTabs):not(#cfgName):not(#cfgLock){display:none}
+.app.libmode #graph{display:none}.app.libmode .libview{display:block}.app.libmode #gpane>.pbar .fgroup>:not(#viewTabs):not(#cfgName):not(#cfgLock){display:none}.app.libmode #gpane>.pbar .fgroup:not(:has(#viewTabs)){display:none}
+/* Barras superiores flotantes sobre la mesa y la vista previa */
+.pbar.fbar{position:absolute;top:10px;left:10px;right:10px;z-index:6;background:none;border:0;padding:0;pointer-events:none;gap:8px;flex-wrap:nowrap}
+.pbar.fbar .fgroup{pointer-events:auto;display:flex;align-items:center;gap:3px;min-width:0;padding:4px 6px;background:color-mix(in srgb,var(--panel) 86%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.pbar.fbar .fgroup:empty{display:none}
+#gpane>.pbar.fbar,#ppane>.pbar.fbar{flex-wrap:wrap;row-gap:6px;overflow:visible}.pbar.fbar .fr{margin-left:auto;flex-wrap:wrap;justify-content:flex-end}.pbar.fbar h3{white-space:nowrap}
+.pbar.fbar .fgroup.fl{flex-wrap:wrap}
+.pbar.fbar h3{padding:0 4px 0 6px}
+.pbar.fbar .vtabs{margin-right:2px}
+.libview{padding-top:62px}
+#pv .ptools{top:58px}
+.center.float #ppane>.pbar.fbar{position:static;padding:6px 10px;background:var(--panel);border-bottom:1px solid var(--line);pointer-events:auto}
+.center.float #ppane>.pbar.fbar .fgroup{background:none;border:0;box-shadow:none;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+.center.float #pv .ptools{top:8px}
 .libview.drag{outline:2px dashed var(--accent);outline-offset:-8px}
 .lv-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lv-bar h2{font:600 20px var(--f-display);margin:0}
 .lv-tip{color:var(--muted);font-size:12.5px;margin:6px 0 16px}
@@ -1319,7 +1332,7 @@ let lastMs=0;
 function renderPreview(){
   if(!gl||!copyProg)return;const t=previewTarget();const doc=docSize();
   const r=pv.getBoundingClientRect();if(r.width<4||r.height<4)return;
-  if(pview.zoom==='fit'){pview.z=Math.min((r.width-24)/doc.w,(r.height-24)/doc.h);pview.px=0;pview.py=0;}
+  if(pview.zoom==='fit'){const tb=center.classList.contains('float')?0:52;pview.z=Math.min((r.width-24)/doc.w,(r.height-24-tb)/doc.h);pview.px=0;pview.py=tb/2;}
   const z=Math.max(pview.z,.02),dpr=window.devicePixelRatio||1;
   const max=Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE),8192);
   const rs=Math.min(z*dpr,state.exportScale,max/Math.max(doc.w,doc.h));
@@ -2022,6 +2035,7 @@ function saveFloat(){try{localStorage.setItem('filterlab.float',JSON.stringify(f
 function setFloat(on){const P=$('#ppane');center.classList.toggle('float',on);$('#floatBtn').setAttribute('aria-pressed',on);$('#floatBtn').title=on?'Acoplar la vista previa al lado del mapa':'Desacoplar la vista previa (ventana flotante)';
   if(on)placeFloat();else['left','top','width','height'].forEach(k=>P.style[k]='');requestAnimationFrame(()=>{scheduleRender();drawWires();});}
 $('#floatBtn').onclick=()=>setFloat(!center.classList.contains('float'));
+[$('#gpane>.pbar'),$('#ppane>.pbar')].forEach(bar=>{const kids=[...bar.children],i=kids.findIndex(k=>k.classList.contains('sp'));const a=document.createElement('div'),b=document.createElement('div');a.className='fgroup fl';b.className='fgroup fr';kids.forEach((k,j)=>{if(j<i)a.append(k);else if(j>i)b.append(k);});bar.prepend(a);bar.append(b);bar.classList.add('fbar');});
 (()=>{const P=$('#ppane'),bar=P.querySelector('.pbar');let d=null;
   bar.addEventListener('pointerdown',e=>{if(!center.classList.contains('float')||e.button!==0||e.target.closest('button,select,input,.seg'))return;d={sx:e.clientX,sy:e.clientY,x:fl.x,y:fl.y};bar.setPointerCapture(e.pointerId);});
   bar.addEventListener('pointermove',e=>{if(!d)return;fl.x=d.x+e.clientX-d.sx;fl.y=d.y+e.clientY-d.sy;placeFloat();});
@@ -2396,7 +2410,7 @@ function boot(){
   loadGraph(BUILTIN_G[0].g);
   const p=primaryImageNode();const rec=makeSourceTex(sampleImage());rec.name='ejemplo';images.set(p.uid,rec);
   hist=[];hi=-1;pushHistory();buildGraphDOM();scheduleRender();initConfigs();
-  window.__taller={showView,importFiles,saveCfgZip,openConfig,get configs(){return configs;},G,NT,evaluate,images,frameAll,errs,addNode,connect,buildGraphDOM,enterPaint,exitPaint,paintData,serialize,loadGraph,undo,redo,pushHistory,scheduleRender,ptool};
+  window.__taller={setNodeImage,docSize,showView,importFiles,saveCfgZip,openConfig,get configs(){return configs;},G,NT,evaluate,images,frameAll,errs,addNode,connect,buildGraphDOM,enterPaint,exitPaint,paintData,serialize,loadGraph,undo,redo,pushHistory,scheduleRender,ptool};
 }
 (document.fonts&&document.fonts.ready?Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,1500))]):Promise.resolve()).then(boot);
 </script>
