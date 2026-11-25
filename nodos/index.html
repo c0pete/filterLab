@@ -1019,23 +1019,31 @@ const NT={
    float e=clamp(length(vec2(gx,gy))*p_gain*.25,0.,1.);vec3 c=p_color>.5?texture(u_t0,uv).rgb*e:vec3(e);
    if(p_inv>.5)c=p_color>.5?mix(vec3(1.),texture(u_t0,uv).rgb,e):vec3(1.-e);return vec4(c,1.);}`},
  transform:{name:'Transformar',cat:'basicos',desc:'Escala, rota, mueve o repite',inputs:[{k:'in',l:'Entrada'}],
-  params:[R('scale','Escala',.1,4,1,.01),R('rot','Rotación',-180,180,0,1,'°'),R('tx','Mover X',-1,1,0,.005),R('ty','Mover Y',-1,1,0,.005),B('tile','Repetir'),B('flip','Espejar'),S('interp','Remuestreo',['Vecino más próximo','Bilineal','Alta calidad'],2)],
-  glsl:`vec4 smp(vec2 p){vec2 R=u_res;if(p_tile>.5)p=fract(p);int m=int(p_interp+.5);
-   if(m==0)return texelFetch(u_t0,clamp(ivec2(floor(p*R)),ivec2(0),ivec2(R)-1),0);
-   if(m==1)return texture(u_t0,p);
-   /* bicúbico (Catmull-Rom con 9 lecturas bilineales) */
-   vec2 sp=p*R-.5,f=fract(sp),t=floor(sp)+.5;vec2 w0=f*(-.5+f*(1.-.5*f)),w1=1.+f*f*(-2.5+1.5*f),w2=f*(.5+f*(2.-1.5*f)),w3=f*f*(-.5+.5*f);
+  params:[R('scale','Escala',.1,4,1,.01),R('rot','Rotación',-180,180,0,1,'°'),R('tx','Mover X',-1,1,0,.005),R('ty','Mover Y',-1,1,0,.005),B('tile','Repetir'),B('flip','Espejar'),S('interp','Remuestreo',['Por aproximación','Bilineal','Alta calidad'],2)],
+  /* Si la entrada es directamente un nodo Imagen, se muestrea la foto original (un solo remuestreo, como rasterizar). */
+  glsl:`uniform vec2 u_tsz;uniform int u_direct;uniform vec2 u_isz;
+  vec2 mapP(vec2 uv){float asp=u_res.x/u_res.y;vec2 p=(uv-.5-vec2(p_tx,p_ty))*vec2(asp,1.);p=rot(p,-radians(p_rot))/p_scale;p.x/=asp;p+=.5;if(p_flip>.5)p.x=1.-p.x;
+   if(p_tile>.5)p=fract(p);if(u_direct==1)p=(p-.5)*(u_res/max(u_scale,1e-4))/u_isz+.5;return p;}
+  bool outside(vec2 p){return p.x<0.||p.y<0.||p.x>1.||p.y>1.;}
+  vec4 tap(vec2 q,float lod){return outside(q)?vec4(0.):(u_direct==1?textureLod(u_img,q,lod):textureLod(u_t0,q,0.));}
+  vec4 cubic(vec2 p){vec2 R=u_tsz;vec2 sp=p*R-.5,f=fract(sp),t=floor(sp)+.5;
+   vec2 w0=f*(-.5+f*(1.-.5*f)),w1=1.+f*f*(-2.5+1.5*f),w2=f*(.5+f*(2.-1.5*f)),w3=f*f*(-.5+.5*f);
    vec2 w12=w1+w2,o12=w2/w12;vec2 t0=(t-1.)/R,t3=(t+2.)/R,t12=(t+o12)/R;
-   vec4 c=texture(u_t0,vec2(t0.x,t0.y))*w0.x*w0.y+texture(u_t0,vec2(t12.x,t0.y))*w12.x*w0.y+texture(u_t0,vec2(t3.x,t0.y))*w3.x*w0.y
-     +texture(u_t0,vec2(t0.x,t12.y))*w0.x*w12.y+texture(u_t0,vec2(t12.x,t12.y))*w12.x*w12.y+texture(u_t0,vec2(t3.x,t12.y))*w3.x*w12.y
-     +texture(u_t0,vec2(t0.x,t3.y))*w0.x*w3.y+texture(u_t0,vec2(t12.x,t3.y))*w12.x*w3.y+texture(u_t0,vec2(t3.x,t3.y))*w3.x*w3.y;return clamp(c,0.,1.);}
-  vec2 mapP(vec2 uv){float asp=u_res.x/u_res.y;vec2 p=(uv-.5-vec2(p_tx,p_ty))*vec2(asp,1.);p=rot(p,-radians(p_rot))/p_scale;p.x/=asp;p+=.5;if(p_flip>.5)p.x=1.-p.x;return p;}
-  bool outside(vec2 p){return p_tile<.5&&(p.x<0.||p.x>1.||p.y<0.||p.y>1.);}
-  vec4 node(vec2 uv){vec2 p=mapP(uv);
-   /* al achicar, alta calidad promedia varias muestras dentro de cada píxel (reducción por pasos) */
-   if(int(p_interp+.5)==2&&p_scale<.99){int n=int(clamp(ceil(1./p_scale),2.,4.));vec4 a=vec4(0.);
-     for(int j=0;j<4;j++)for(int i=0;i<4;i++){if(i>=n||j>=n)continue;vec2 q=mapP(uv+((vec2(i,j)+.5)/float(n)-.5)/u_res);if(!outside(q))a+=texture(u_t0,p_tile>.5?fract(q):q);}return a/float(n*n);}
-   if(outside(p))return vec4(0.);return smp(p);}`},
+   return tap(vec2(t0.x,t0.y),0.)*w0.x*w0.y+tap(vec2(t12.x,t0.y),0.)*w12.x*w0.y+tap(vec2(t3.x,t0.y),0.)*w3.x*w0.y
+     +tap(vec2(t0.x,t12.y),0.)*w0.x*w12.y+tap(vec2(t12.x,t12.y),0.)*w12.x*w12.y+tap(vec2(t3.x,t12.y),0.)*w3.x*w12.y
+     +tap(vec2(t0.x,t3.y),0.)*w0.x*w3.y+tap(vec2(t12.x,t3.y),0.)*w12.x*w3.y+tap(vec2(t3.x,t3.y),0.)*w3.x*w3.y;}
+  float lz(float x){x=abs(x);if(x<1e-4)return 1.;if(x>=2.)return 0.;float a=3.14159265*x;return 2.*sin(a)*sin(a*.5)/(a*a);}
+  vec4 node(vec2 uv){vec2 p=mapP(uv);int m=int(p_interp+.5);vec2 R=u_tsz;
+   if(m==0){if(outside(p))return vec4(0.);return u_direct==1?texelFetch(u_img,clamp(ivec2(floor(p*R)),ivec2(0),ivec2(R)-1),0):texelFetch(u_t0,clamp(ivec2(floor(p*R)),ivec2(0),ivec2(R)-1),0);}
+   /* texels de origen por píxel de salida */
+   vec2 du=mapP(uv+vec2(1./u_res.x,0.))-p,dv=mapP(uv+vec2(0.,1./u_res.y))-p;float fw=max(length(du*R),length(dv*R));
+   if(m==1)return tap(p,u_direct==1?max(0.,log2(fw)):0.);
+   if(fw<=1.05)return clamp(cubic(p),0.,1.);
+   /* al achicar: filtro Lanczos de radio 2 sobre la huella del píxel, en luz lineal */
+   int n=int(clamp(ceil(fw*2.),4.,12.));float lod=u_direct==1?max(0.,log2(fw*4./float(n))):0.;vec4 acc=vec4(0.);float ws=0.;
+   for(int j=0;j<12;j++){if(j>=n)break;for(int i=0;i<12;i++){if(i>=n)break;vec2 o=((vec2(i,j)+.5)/float(n)-.5)*4.;float w=lz(o.x)*lz(o.y);
+     vec4 c=tap(p+du*o.x+dv*o.y,lod);c.rgb=pow(c.rgb,vec3(2.2))*c.a;acc+=c*w;ws+=w;}}
+   acc/=max(ws,1e-4);acc=max(acc,0.);return vec4(acc.a>1e-4?pow(acc.rgb/acc.a,vec3(1./2.2)):vec3(0.),clamp(acc.a,0.,1.));}`},
 
  p_stripes:{name:'Rayas',cat:'patrones',desc:'Franjas paralelas',inputs:[],params:[R('size','Tamaño',4,400,40,1,'px'),R('angle','Ángulo',0,180,0,1,'°'),R('thick','Grosor',.02,.98,.5,.01),C('c1','Color A','#1c1b19'),C('c2','Color B','#ece6d8')],
   glsl:`vec4 node(vec2 uv){vec2 q=rot((uv-.5)*u_res/u_scale,radians(p_angle))/max(p_size,1.);float aa=length(fwidth(q))*.75+1e-4;float d=abs(fract(q.x)-.5)*2.;float m=1.-ss(p_thick-aa*2.,p_thick+aa*2.,d);return vec4(mix(p_c2,p_c1,m),1.);}`},
@@ -1323,11 +1331,14 @@ function runNode(n,T,ins,out,W,H,scale){
     temps.forEach(release);return;
   }
   const pr=nodeProg(T),U=pr.U;gl.useProgram(pr.p);
-  const im=T.image?images.get(n.uid):T.paint?ensurePaint(n):T.text?textTex(n,W,H):null;
+  let im=T.image?images.get(n.uid):T.paint?ensurePaint(n):T.text?textTex(n,W,H):null;let direct=0;
+  if(n.type==='transform'){const e=edgeInto(n.uid,'in'),src=e&&byId(e.from);const r=src&&src.type==='image'&&!src.bypass&&images.get(src.uid);
+    if(r&&nodeDom(src.uid).w===nodeDom(n.uid).w&&nodeDom(src.uid).h===nodeDom(n.uid).h){im=r;direct=1;}}
   bindUnits([ins[0]&&ins[0].tex,ins[1]&&ins[1].tex,ins[2]&&ins[2].tex,im&&im.tex]);
   gl.uniform1i(U('u_has0'),ins[0]?1:0);gl.uniform1i(U('u_has1'),ins[1]?1:0);gl.uniform1i(U('u_has2'),ins[2]?1:0);gl.uniform1i(U('u_hasimg'),im?1:0);
   gl.uniform2f(U('u_res'),W,H);gl.uniform1f(U('u_scale'),scale);gl.uniform1f(U('u_seed'),state.seed);
   if(im)gl.uniform2f(U('u_isz'),im.w,im.h);
+  if(n.type==='transform'){gl.uniform1i(U('u_direct'),direct);gl.uniform2f(U('u_tsz'),direct?im.w:W,direct?im.h:H);if(!direct)gl.uniform1i(U('u_hasimg'),0);}
   if(T.paint)gl.uniform1f(U('u_ov'),(paintOvOn&&paintUid===n.uid)?1:0);
   for(const p of T.params){if(p.t==='x')continue;const v=P[p.k];if(p.t==='c')gl.uniform3fv(U('p_'+p.k),hex(v));else gl.uniform1f(U('p_'+p.k),+v);}
   drawTo(out,W,H);
@@ -2447,7 +2458,7 @@ async function importFiles(files,openLast){let last=null,n=0;
 $('#cfgOpen').onclick=()=>$('#cfgIn').click();
 $('#cfgIn').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)importFiles(fs,false);};
 $('#cfgZip').onclick=saveCfgZip;
-$('#cfgNew').onclick=()=>{addConfig('Nueva config',JSON.parse(JSON.stringify(BUILTIN_G[0].g)),null);buildCfgGrid();};
+$('#cfgNew').onclick=()=>{addConfig('Nueva config',chainGraph([]),null);buildCfgGrid();};
 $('#libview').addEventListener('dragover',e=>{e.preventDefault();$('#libview').classList.add('drag');});
 $('#libview').addEventListener('dragleave',e=>{if(e.target===$('#libview'))$('#libview').classList.remove('drag');});
 $('#libview').addEventListener('drop',e=>{e.preventDefault();$('#libview').classList.remove('drag');const fs=[...e.dataTransfer.files];if(fs.length)importFiles(fs,false);});
@@ -2455,7 +2466,7 @@ $('#libview').addEventListener('drop',e=>{e.preventDefault();$('#libview').class
 function boot(){
   if(!gl){$('#pv').innerHTML='<p style="margin:auto;max-width:40ch;text-align:center;padding:24px" class="muted">Este navegador no tiene WebGL2, que la app necesita. Probá con una versión reciente de Chrome, Firefox, Edge o Safari.</p>';return;}
   initGL();applyView();buildTabs();buildList();buildPresets();
-  loadGraph(BUILTIN_G[0].g);
+  loadGraph(location.hash==='#demo'?BUILTIN_G[0].g:chainGraph([]));
   const p=primaryImageNode();const rec=makeSourceTex(sampleImage());rec.name='ejemplo';images.set(p.uid,rec);
   hist=[];hi=-1;pushHistory();buildGraphDOM();scheduleRender();initConfigs();
   window.__taller={setNodeImage,docSize,showView,importFiles,saveCfgZip,openConfig,get configs(){return configs;},G,NT,evaluate,images,frameAll,errs,addNode,connect,buildGraphDOM,enterPaint,exitPaint,paintData,serialize,loadGraph,undo,redo,pushHistory,scheduleRender,ptool};
