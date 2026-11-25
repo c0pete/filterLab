@@ -51,7 +51,7 @@ header.top{grid-area:top;display:flex;align-items:center;gap:10px;flex-wrap:wrap
 .vtabs button[aria-selected="true"]{background:var(--panel-2);color:var(--fg);box-shadow:0 0 0 1px var(--line)}
 .cfgname{display:none;font:500 12px var(--f-mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22ch}
 .libview{display:none;flex:1;min-height:0;overflow:auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
-.app.libmode #graph{display:none}.app.libmode .libview{display:block}.app.libmode #gpane>.pbar .fgroup>:not(#viewTabs):not(#cfgName):not(#cfgLock){display:none}.app.libmode #gpane>.pbar .fgroup:not(:has(#viewTabs)){display:none}
+.app.libmode #graph{display:none}.app.libmode .libview{display:block}.app.libmode #gpane>.pbar .fgroup>:not(#viewTabs):not(#cfgName):not(#cfgLock):not(#lvBar){display:none}.app.libmode #gpane>.pbar .fr>:not(#lvBar){display:none}
 /* Barras superiores flotantes sobre la mesa y la vista previa */
 .pbar.fbar{position:absolute;top:10px;left:10px;right:10px;z-index:6;background:none;border:0;padding:0;pointer-events:none;gap:8px;flex-wrap:nowrap}
 .pbar.fbar .fgroup{pointer-events:auto;display:flex;align-items:center;gap:3px;min-width:0;padding:4px 6px;background:color-mix(in srgb,var(--panel) 80%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
@@ -65,13 +65,13 @@ header.top{grid-area:top;display:flex;align-items:center;gap:10px;flex-wrap:wrap
 .pbar.fbar .vtabs button+button{border-left:1px solid var(--line);border-radius:0 7px 7px 0}.pbar.fbar .vtabs button:first-child[aria-selected="true"]{border-radius:7px 0 0 7px}
 .pbar.fbar .fl #undo{border-left:1px solid var(--line);border-radius:0;padding-left:10px;margin-left:2px}
 .pbar.fbar .fl{padding:3px}
-.libview{padding-top:62px}
+.libview{padding-top:58px}
 #pv .ptools{top:58px}
 .center.float #ppane>.pbar.fbar{position:static;padding:6px 10px;background:var(--panel);border-bottom:1px solid var(--line);pointer-events:auto}
 .center.float #ppane>.pbar.fbar .fgroup{background:none;border:0;box-shadow:none;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none}
 .center.float #pv .ptools{top:8px}
 .libview.drag{outline:2px dashed var(--accent);outline-offset:-8px}
-.lv-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.lv-bar h2{font:600 20px var(--f-display);margin:0}
+.lv-bar{display:none;align-items:center;gap:3px}.lv-bar .muted{font:500 11.5px var(--f-mono);padding:0 6px}.app.libmode .lv-bar{display:flex}.ib.zipb{color:var(--accent);width:auto;display:inline-flex;align-items:center;gap:3px;padding:0 7px}.ib.zipb b{font:700 10.5px var(--f-mono);letter-spacing:.02em}.lv-bar h2{font:600 20px var(--f-display);margin:0}
 .lv-tip{color:var(--muted);font-size:12.5px;margin:6px 0 16px}
 .cfg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
 .cfg{position:relative;background:var(--node);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
@@ -365,8 +365,10 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
         <div class="ghelp">Espacio (tocar): buscar nodo · Doble clic en el fondo: agregar nodo · Doble clic en un cable: desvío · Arrastrar en el fondo: seleccionar con recuadro · Shift+clic: sumar a la selección · Clic central o Espacio+arrastrar: mover la hoja · Doble clic en la miniatura: vista previa · Tab: pantalla completa · Supr: borrar · Rueda: zoom</div>
       </div>
       <section class="libview" id="libview" aria-label="Biblioteca de configs">
-        <div class="lv-bar"><span class="muted" id="cfgCount"></span><span style="flex:1"></span>
-          <button class="btn" id="cfgNew">Nueva config</button><button class="btn" id="cfgOpen">Abrir .json / .zip…</button><button class="btn primary" id="cfgZip">Guardar todo (.zip)</button>
+        <div class="lv-bar" id="lvBar"><span class="muted" id="cfgCount"></span>
+          <button class="ib" id="cfgNew" title="Nueva config" aria-label="Nueva config"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M8 5v6M5 8h6"/></svg></button>
+          <button class="ib" id="cfgOpen" title="Abrir .json / .zip…" aria-label="Abrir configs"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.8 12.5V3.5h4l1.5 1.5h6v2"/><path d="M1.8 12.5 3.6 7h11l-1.8 5.5z"/></svg></button>
+          <button class="ib zipb" id="cfgZip" title="Guardar todo (.zip)" aria-label="Guardar todo en zip"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1.5v7.5M5 6l3 3 3-3M2.5 12.5h11"/></svg><b>zip</b></button>
           <input type="file" id="cfgIn" accept=".json,application/json,.png,image/png,.zip,application/zip" multiple hidden></div>
         <p class="lv-tip">Cada config guarda el grafo y su miniatura, sin imágenes: al abrirla usa la imagen que tengas en la mesa. Clic para abrirla · el lápiz renombra · podés soltar acá archivos .json, .png o .zip.</p>
         <div class="cfg-grid" id="cfgGrid"></div>
@@ -1102,10 +1104,10 @@ const NT={
   vec4 node(vec2 uv){vec3 base=u_has0==1?texture(u_t0,uv).rgb:p_bg;vec4 pt=u_hasimg==1?texture(u_img,uv):vec4(0.);float a=pt.a*p_opacity;int m=int(p_mode+.5);
   if(m==1){float v=p_inv>.5?1.-a:a;if(u_ov>.5)return vec4(mix(base*.8+.1,vec3(1.,.22,.3),v*.65),1.);return vec4(vec3(v),1.);}
   if(m==2)base=p_bg;return vec4(mix(base,pt.rgb,a),1.);}`},
- canvas:{name:'Lienzo',cat:'basicos',desc:'Define el tamaño final en píxeles de todo el grafo. Las imágenes se recortan según su Ajuste, Zoom y Mover',inputs:[{k:'in',l:'Entrada'}],
+ canvas:{name:'Lienzo',cat:'basicos',desc:'Define el tamaño en píxeles de lo que sigue después. Lo que entra se centra a tamaño real: lo que sobra se recorta y lo que falta se rellena con el fondo',inputs:[{k:'in',l:'Entrada'}],
   params:[S('preset','Formato',CANVAS_PRESETS.map(x=>x[0]),0),N('w','Ancho',1080,16,8192,'px'),N('h','Alto',1080,16,8192,'px'),C('bg','Fondo vacío','#000000')],
   onParam(P,k){if(k==='preset'){const pr=CANVAS_PRESETS[+P.preset];if(pr&&pr[1]){P.w=pr[1];P.h=pr[2];return true;}}else if(k==='w'||k==='h'){const i=CANVAS_PRESETS.findIndex(x=>x[1]===+P.w&&x[2]===+P.h);const np=i>0?i:0;if(np!==+P.preset){P.preset=np;return true;}}},
-  glsl:`vec4 node(vec2 uv){return vec4(u_has0==1?texture(u_t0,uv).rgb:p_bg,1.);}`},
+  glsl:`vec4 node(vec2 uv){if(u_has0==0)return vec4(p_bg,1.);vec4 c=texture(u_t0,uv);return vec4(mix(p_bg,c.rgb,c.a),1.);}`},
  text:{name:'Texto',cat:'basicos',desc:'Escribe texto con cualquier fuente de Google Fonts',inputs:[{k:'base',l:'Fondo'}],text:true,
   params:[X('text','Texto','filterLab','Escribí acá…'),S('font','Fuente',GFONTS.map(f=>f[0]),0),X('gfont','Otra fuente de Google','','Nombre exacto, ej.: Rubik Mono One'),S('weight','Peso',['Fina 300','Normal 400','Media 500','Negrita 700','Black 900'],3),B('italic','Cursiva'),
    R('size','Tamaño',6,600,120,1,'px'),R('lh','Interlineado',.6,2.5,1.1,.01),R('track','Espaciado',-20,60,0,.5,'px'),S('align','Alineación',['Izquierda','Centro','Derecha'],1),
@@ -1185,6 +1187,12 @@ function program(fs){const p=gl.createProgram();gl.attachShader(p,vsObj);gl.atta
   gl.useProgram(p);UNITS.forEach(([n,u])=>{const l=U(n);if(l)gl.uniform1i(l,u);});return{p,U};}
 const decl=ps=>ps.filter(p=>p.k[0]!=='_'&&p.t!=='x').map(p=>p.t==='c'?`uniform vec3 p_${p.k};`:`uniform float p_${p.k};`).join('\n');
 function filterProg(f){if(!f._prog)f._prog=program(HEAD+decl(f.params)+'\n'+(f.uniforms||'')+'\n'+f.glsl+FMAIN);return f._prog;}
+let placeProg=null;
+/* Copia una textura centrada a escala 1:1 en otra de distinto tamaño (lo que sobra queda transparente) */
+function placeInto(src,dst){if(!placeProg)placeProg=program(`#version 300 es
+precision highp float;in vec2 v_uv;out vec4 o;uniform sampler2D u_t0;uniform vec2 u_r;
+void main(){vec2 q=(v_uv-.5)*u_r+.5;o=(q.x<0.||q.y<0.||q.x>1.||q.y>1.)?vec4(0.):texture(u_t0,q);}`);
+  gl.useProgram(placeProg.p);bindUnits([src.tex]);gl.uniform1i(placeProg.U('u_t0'),0);gl.uniform2f(placeProg.U('u_r'),dst.w/src.w,dst.h/src.h);drawTo(dst,dst.w,dst.h);}
 function nodeProg(T){if(!T._prog)T._prog=program(HEAD+decl(T.params)+'\n'+T.glsl+NMAIN);return T._prog;}
 let copyProg,mixProg,dummyTex;
 function mkTex(w,h,data){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
@@ -1240,29 +1248,43 @@ function connect(from,to,port){if(from===to)return false;if(reaches(to,from)){to
   G.edges=G.edges.filter(e=>!(e.to===to&&e.port===port));G.edges.push({from,to,port});return true;}
 const outputNode=()=>G.nodes.find(n=>n.type==='output');
 function primaryImageNode(){const s=byId(sel);if(s&&s.type==='image')return s;return G.nodes.filter(n=>n.type==='image').sort((a,b)=>a.uid-b.uid)[0]||null;}
-function docSize(){const on=G.nodes.find(n=>n.type==='output');const cn=G.nodes.filter(n=>n.type==='canvas'&&on&&reaches(n.uid,on.uid)).sort((a,b)=>a.uid-b.uid)[0];if(cn)return{w:Math.max(16,Math.round(+cn.params.w)||1080),h:Math.max(16,Math.round(+cn.params.h)||1080)};for(const n of [...G.nodes].sort((a,b)=>a.uid-b.uid)){if(n.type==='image'){const im=images.get(n.uid);if(im)return{w:im.w,h:im.h};}}return{w:1600,h:1066};}
+/* Tamaño propio de cada nodo: un Lienzo fija el suyo y lo hereda todo lo que viene después;
+   lo de antes del Lienzo sigue con el tamaño base (la primera imagen). Los nodos sin entradas toman el tamaño de quien los usa. */
+function canvasDim(n){return{w:Math.max(16,Math.round(+n.params.w)||1080),h:Math.max(16,Math.round(+n.params.h)||1080)};}
+function baseSize(){for(const n of [...G.nodes].sort((a,b)=>a.uid-b.uid)){if(n.type==='image'){const im=images.get(n.uid);if(im)return{w:im.w,h:im.h};}}return{w:1600,h:1066};}
+function domUp(uid,seen){const n=byId(uid);if(!n||seen.has(uid))return null;seen.add(uid);if(n.type==='canvas')return canvasDim(n);
+  const T=NT[n.type];for(const inp of T.inputs){const e=edgeInto(uid,inp.k);if(e){const d=domUp(e.from,seen);if(d)return d;}}return null;}
+function domDown(uid,seen){if(seen.has(uid))return null;seen.add(uid);const e=G.edges.find(x=>x.from===uid&&byId(x.to));if(!e)return null;const c=byId(e.to);if(c.type==='canvas')return null;
+  return domUp(c.uid,new Set())||domDown(c.uid,seen);}
+function nodeDom(uid){return domUp(uid,new Set())||domDown(uid,new Set())||baseSize();}
+function docSize(){const on=outputNode();return on?nodeDom(on.uid):baseSize();}
 
 /* Evalúa el subgrafo que llega a `target`. keepAll conserva todas las salidas (miniaturas). */
 let readBuf=null;
-function evaluate(target,W,H,keepAll){
+function evaluate(target,W,H,keepAll,kFix){
   pool.frame++;
   const need=new Set(),st=[target];
   while(st.length){const u=st.pop();if(need.has(u))continue;need.add(u);for(const e of G.edges)if(e.to===u)st.push(e.from);}
   if(keepAll)G.nodes.forEach(n=>need.add(n.uid));
   const refs=new Map();for(const e of G.edges)if(need.has(e.to)&&byId(e.to))refs.set(e.from,(refs.get(e.from)||0)+1);
-  const memo=new Map();const doc=docSize();const scale=W/doc.w;
+  const memo=new Map();const scale=kFix||W/nodeDom(target).w;const dims=new Map();
+  const sizeOf=uid=>{if(uid===target&&!kFix)return[W,H];if(!dims.has(uid)){const d=nodeDom(uid);dims.set(uid,[Math.max(1,Math.round(d.w*scale)),Math.max(1,Math.round(d.h*scale))]);}return dims.get(uid);};
+  const adapted=[];const fit=(it,w,h)=>{if(!it||(it.w===w&&it.h===h))return it;const t=acquire(w,h);placeInto(it,t);adapted.push(t);return t;};
   const ev=uid=>{
     if(memo.has(uid))return memo.get(uid);
     const n=byId(uid);if(!n)return null;const T=NT[n.type];
-    const ins=T.inputs.map(inp=>{const e=edgeInto(uid,inp.k);return e&&byId(e.from)?ev(e.from):null;});
-    const out=acquire(W,H);
-    if(n.bypass&&n.type!=='output'){bindUnits([ins[0]&&ins[0].tex]);gl.useProgram(copyProg.p);drawTo(out,W,H);errs.delete(uid);}
-    else try{runNode(n,T,ins,out,W,H,scale);errs.delete(uid);}catch(err){errs.set(uid,String(err.message||err));console.error(n.type,err);bindUnits([ins[0]&&ins[0].tex]);gl.useProgram(copyProg.p);drawTo(out,W,H);}
+    const raw=T.inputs.map(inp=>{const e=edgeInto(uid,inp.k);return e&&byId(e.from)?ev(e.from):null;});
+    const [w,h]=sizeOf(uid);const ins=raw.map(it=>fit(it,w,h));
+    const out=acquire(w,h);
+    if(n.bypass&&n.type!=='output'){bindUnits([ins[0]&&ins[0].tex]);gl.useProgram(copyProg.p);drawTo(out,w,h);errs.delete(uid);}
+    else try{runNode(n,T,ins,out,w,h,scale);errs.delete(uid);}catch(err){errs.set(uid,String(err.message||err));console.error(n.type,err);bindUnits([ins[0]&&ins[0].tex]);gl.useProgram(copyProg.p);drawTo(out,w,h);}
+    adapted.splice(0).forEach(release);
     if(!keepAll)T.inputs.forEach(inp=>{const e=edgeInto(uid,inp.k);if(e&&memo.has(e.from)){const r=refs.get(e.from)-1;refs.set(e.from,r);if(r<=0&&e.from!==target)release(memo.get(e.from));}});
     memo.set(uid,out);return out;
   };
-  const res=ev(target);
+  let res=ev(target);
   if(keepAll)G.nodes.forEach(n=>ev(n.uid));
+  if(kFix&&res&&(res.w!==W||res.h!==H)){const t=acquire(W,H);placeInto(res,t);release(res);memo.set(target,t);res=t;}
   return{res,memo};
 }
 function runNode(n,T,ins,out,W,H,scale){
@@ -1303,7 +1325,7 @@ function ensureFont(fam){if(fontReq.has(fam))return;fontReq.add(fam);const f=GFO
   const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(fam).replace(/%20/g,'+')+(f&&f[1]?':wght@'+f[1]:'')+'&display=swap';
   l.onload=()=>{const ws=['300','400','500','700','900'];Promise.all(ws.map(w=>document.fonts.load(`${w} 40px "${fam}"`).catch(()=>{}))).then(()=>{textRecs.forEach(r=>r.key='');scheduleRender();scheduleThumbs();});};
   l.onerror=()=>toast('No se pudo cargar la fuente “'+fam+'”');document.head.appendChild(l);}
-function textTex(n,W,H){const P=n.params,fam=gfFamily(P);ensureFont(fam);const doc=docSize(),k=W/doc.w;
+function textTex(n,W,H){const P=n.params,fam=gfFamily(P);ensureFont(fam);const doc=nodeDom(n.uid),k=W/doc.w;
   const key=[W,H,fam,P.text,P.weight,P.italic,P.size,P.lh,P.track,P.align,P.x,P.y,P.rot,P.color,P.sw,P.sc,document.fonts.status].join('|');
   let recs=textRecs.get(n.uid);if(!recs){recs=[];textRecs.set(n.uid,recs);}
   let rec=recs.find(r=>r.W===W&&r.H===H);
@@ -1335,7 +1357,7 @@ function previewTarget(){if(state.showOriginal){const im=primaryImageNode();if(i
 let raf=0;function scheduleRender(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;renderPreview();});}
 let lastMs=0;
 function renderPreview(){
-  if(!gl||!copyProg)return;const t=previewTarget();const doc=docSize();
+  if(!gl||!copyProg)return;const t=previewTarget();const doc=pvDoc();
   const r=pv.getBoundingClientRect();if(r.width<4||r.height<4)return;
   if(pview.zoom==='fit'){const tb=center.classList.contains('float')?0:52;pview.z=Math.min((r.width-24)/doc.w,(r.height-24-tb)/doc.h);pview.px=0;pview.py=tb/2;}
   const z=Math.max(pview.z,.02),dpr=window.devicePixelRatio||1;
@@ -1345,7 +1367,7 @@ function renderPreview(){
   const t0=performance.now();
   if(paintUid&&(!byId(paintUid)||(!state.showOriginal&&t!==paintUid))){exitPaint();}
   if(t==null){present(null,W,H);}else{paintOvOn=true;try{const A=evaluate(t,W,H,false);let shown=A.res,B=null,tmp=null;const im=primaryImageNode();
-    if(state.cmp&&!state.showOriginal&&!paintUid&&im&&im.uid!==t){B=evaluate(im.uid,W,H,false);tmp=acquire(W,H);const pr=nodeProg(NT._cmp);gl.useProgram(pr.p);bindUnits([B.res.tex,A.res.tex]);
+    if(state.cmp&&!state.showOriginal&&!paintUid&&im&&im.uid!==t){B=evaluate(im.uid,W,H,false,W/doc.w);tmp=acquire(W,H);const pr=nodeProg(NT._cmp);gl.useProgram(pr.p);bindUnits([B.res.tex,A.res.tex]);
       gl.uniform2f(pr.U('u_res'),W,H);gl.uniform1f(pr.U('p_split'),state.split);drawTo(tmp,W,H);shown=tmp;}
     present(shown,W,H);releaseAll(A.memo);if(B)releaseAll(B.memo);if(tmp)release(tmp);}finally{paintOvOn=false;}}
   trimPool(false);lastMs=performance.now()-t0;
@@ -1362,7 +1384,7 @@ function renderPreview(){
   refreshErrors();scheduleThumbs();
 }
 let pwAcc=0;
-pv.addEventListener('wheel',e=>{e.preventDefault();const r=pv.getBoundingClientRect();const doc=docSize();
+pv.addEventListener('wheel',e=>{e.preventDefault();const r=pv.getBoundingClientRect();const doc=pvDoc();
   const [st,acc]=wheelSteps(e,pwAcc);pwAcc=acc;if(!st)return;const old=pview.z,nz=snap25(old*100,st,25,400)/100;
   const mx=e.clientX-r.left-r.width/2,my=e.clientY-r.top-r.height/2;
   pview.px=mx-(mx-pview.px)*nz/old;pview.py=my-(my-pview.py)*nz/old;pview.z=nz;pview.zoom='custom';setZoomSeg(null);scheduleRender();},{passive:false});
@@ -1371,7 +1393,8 @@ pv.addEventListener('pointerdown',e=>{if(paintUid&&e.button===0&&!spaceDown){pai
 pv.addEventListener('pointermove',e=>{if(!pvDrag)return;pview.px=pvDrag.px+e.clientX-pvDrag.x;pview.py=pvDrag.py+e.clientY-pvDrag.y;positionCanvasOnly();});
 pv.addEventListener('pointerup',()=>{pvDrag=null;pv.classList.remove('panning');});
 pv.addEventListener('dblclick',()=>{if(paintUid)return;pview.zoom='fit';setZoomSeg('fit');scheduleRender();});
-function positionCanvasOnly(){const r=pv.getBoundingClientRect();const doc=docSize();const cw=doc.w*pview.z,ch=doc.h*pview.z;cv.style.left=(r.width/2-cw/2+pview.px)+'px';cv.style.top=(r.height/2-ch/2+pview.py)+'px';placeOverlay();placeCmp();}
+function pvDoc(){const t=previewTarget();return t!=null&&byId(t)?nodeDom(t):docSize();}
+function positionCanvasOnly(){const r=pv.getBoundingClientRect();const doc=pvDoc();const cw=doc.w*pview.z,ch=doc.h*pview.z;cv.style.left=(r.width/2-cw/2+pview.px)+'px';cv.style.top=(r.height/2-ch/2+pview.py)+'px';placeOverlay();placeCmp();}
 /* ============================================================
    Pintura: la vista previa funciona como lienzo del nodo Pintura
    Cada trazo terminado crea una versión inmutable (paintData) y el nodo guarda solo su id (n.pv),
@@ -1508,20 +1531,23 @@ $('#viewingTag').onclick=()=>{previewUid=null;markViewing();scheduleRender();};
 /* Miniaturas dentro de los nodos */
 let thumbT=0;
 function scheduleThumbs(){if(!state.thumbs)return;clearTimeout(thumbT);thumbT=setTimeout(renderThumbs,140);}
-let thumbBuf=null;
+let thumbCv=null,thumbBuf=null;
 function renderThumbs(){
   if(!gl||!copyProg||!state.thumbs||!G.nodes.length)return;
-  /* La ficha mide TW×TH; el render conserva la proporción del documento (RW×RH) y se centra con bandas negras */
-  const doc=docSize();const TW=208,TH=Math.max(40,Math.min(180,Math.round(TW*doc.h/doc.w)));
-  const k=Math.min(TW/doc.w,TH/doc.h),RW=Math.max(8,Math.round(doc.w*k)),RH=Math.max(8,Math.round(doc.h*k)),ox=Math.floor((TW-RW)/2),oy=Math.floor((TH-RH)/2);
-  const {memo}=evaluate(G.nodes[0].uid,RW,RH,true);
-  if(!thumbBuf||thumbBuf.length!==RW*RH*4)thumbBuf=new Uint8ClampedArray(RW*RH*4);
-  const raw=new Uint8Array(thumbBuf.buffer);
-  memo.forEach((it,uid)=>{const c=world.querySelector(`.node[data-uid="${uid}"] canvas.thumb`);if(!c||!it)return;
+  /* Cada ficha toma la proporción de su nodo; todo se evalúa con una sola escala y se dibuja encajado */
+  const TW=208,doms=new Map(G.nodes.map(n=>[n.uid,nodeDom(n.uid)]));let k=0,mx=1;
+  doms.forEach(d=>{k=Math.max(k,Math.min(TW/d.w,180/d.h));mx=Math.max(mx,d.w,d.h);});k=Math.min(k,720/mx);
+  const o=outputNode(),od=o?doms.get(o.uid):docSize();
+  const {memo}=evaluate(G.nodes[0].uid,1,1,true,k);
+  if(!thumbCv)thumbCv=document.createElement('canvas');
+  memo.forEach((it,uid)=>{const c=world.querySelector(`.node[data-uid="${uid}"] canvas.thumb`);if(!c||!it)return;const d=doms.get(uid)||od;
+    const TH=Math.max(40,Math.min(180,Math.round(TW*d.h/d.w))),RW=it.w,RH=it.h;
+    if(!thumbBuf||thumbBuf.length!==RW*RH*4)thumbBuf=new Uint8ClampedArray(RW*RH*4);const raw=new Uint8Array(thumbBuf.buffer);
     gl.bindFramebuffer(gl.FRAMEBUFFER,it.fb);gl.readPixels(0,0,RW,RH,gl.RGBA,gl.UNSIGNED_BYTE,raw);
     if(c.width!==TW||c.height!==TH){c.width=TW;c.height=TH;}
     const img=new ImageData(RW,RH);for(let y=0;y<RH;y++)img.data.set(thumbBuf.subarray((RH-1-y)*RW*4,(RH-y)*RW*4),y*RW*4);
-    const x=c.getContext('2d');if(RW!==TW||RH!==TH){x.fillStyle='#000';x.fillRect(0,0,TW,TH);}x.putImageData(img,ox,oy);});
+    thumbCv.width=RW;thumbCv.height=RH;thumbCv.getContext('2d').putImageData(img,0,0);
+    const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,TW,TH);const f=Math.min(TW/RW,TH/RH),w=RW*f,h=RH*f;x.imageSmoothingQuality='high';x.drawImage(thumbCv,(TW-w)/2,(TH-h)/2,w,h);});
   /* La ficha Imagen muestra la foto completa, aunque el lienzo la recorte */
   G.nodes.forEach(n=>{if(n.type!=='image'||n.bypass)return;const r=images.get(n.uid),c=world.querySelector(`.node[data-uid="${n.uid}"] canvas.thumb`);if(!r||!r.src||!c)return;
     const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,c.width,c.height);const k=Math.min(c.width/r.w,c.height/r.h),w=r.w*k,h=r.h*k;x.drawImage(r.src,(c.width-w)/2,(c.height-h)/2,w,h);});
@@ -2043,6 +2069,7 @@ function setFloat(on){const P=$('#ppane');center.classList.toggle('float',on);$(
   if(on)placeFloat();else['left','top','width','height'].forEach(k=>P.style[k]='');requestAnimationFrame(()=>{scheduleRender();drawWires();});}
 $('#floatBtn').onclick=()=>setFloat(!center.classList.contains('float'));
 [$('#gpane>.pbar'),$('#ppane>.pbar')].forEach(bar=>{const kids=[...bar.children],i=kids.findIndex(k=>k.classList.contains('sp'));const a=document.createElement('div'),b=document.createElement('div');a.className='fgroup fl';b.className='fgroup fr';kids.forEach((k,j)=>{if(j<i)a.append(k);else if(j>i)b.append(k);});bar.prepend(a);bar.append(b);bar.classList.add('fbar');});
+$('#gpane>.pbar .fr').append($('#lvBar'));$('#ppane>.pbar .fr').append($('#xsplit'));
 (()=>{const P=$('#ppane'),bar=P.querySelector('.pbar');let d=null;
   bar.addEventListener('pointerdown',e=>{if(!center.classList.contains('float')||e.button!==0||e.target.closest('button,select,input,.seg'))return;d={sx:e.clientX,sy:e.clientY,x:fl.x,y:fl.y};bar.setPointerCapture(e.pointerId);});
   bar.addEventListener('pointermove',e=>{if(!d)return;fl.x=d.x+e.clientX-d.sx;fl.y=d.y+e.clientY-d.sy;placeFloat();});
@@ -2189,7 +2216,7 @@ $('#batchIn').onchange=async e=>{const files=[...e.target.files].filter(f=>f.typ
 const expState={node:null,fmt:'png',q:.92,scale:1,width:0,alpha:'',embed:true,layers:null};
 function nodeLabel(n){const T=NT[n.type];const same=G.nodes.filter(m=>m.type===n.type);return T.name+(same.length>1?' '+(same.indexOf(n)+1):'');}
 /* Píxeles RGBA de arriba hacia abajo de un nodo, a W×H */
-function nodePixels(uid,W,H){const {res,memo}=evaluate(uid,W,H,false);const buf=new Uint8Array(W*H*4);gl.bindFramebuffer(gl.FRAMEBUFFER,res.fb);gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,buf);releaseAll(memo);
+function nodePixels(uid,W,H){const {res,memo}=evaluate(uid,W,H,false,W/docSize().w);const buf=new Uint8Array(W*H*4);gl.bindFramebuffer(gl.FRAMEBUFFER,res.fb);gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,buf);releaseAll(memo);
   const out=new Uint8ClampedArray(W*H*4);const row=W*4;for(let y=0;y<H;y++)out.set(buf.subarray((H-1-y)*row,(H-y)*row),y*row);return out;}
 function expDims(){const doc=docSize();const max=Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE),gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),8192);
   let W,H;if(expState.width>0){W=Math.round(expState.width);H=Math.round(doc.h*W/doc.w);}else{W=Math.round(doc.w*expState.scale);H=Math.round(doc.h*expState.scale);}
@@ -2221,7 +2248,7 @@ function buildPSD(W,H,layers,merged){const enc=s=>{const a=[];for(const ch of s)
   if((2+recLen+chanBytes)%2)o++;u32(0);
   u16(0);[0,1,2].forEach(c=>{for(let i=0;i<plane;i++)out[o++]=merged[i*4+c];});return new Blob([out],{type:'image/vnd.adobe.photoshop'});}
 /* SVG del semitono: círculos o cuadrados vectoriales */
-function halftoneSVG(n,W,H){const P=n.params;const e=edgeInto(n.uid,'in');if(!e)throw new Error('El semitono no tiene entrada');const doc=docSize();const sc=W/doc.w;
+function halftoneSVG(n,W,H){const P=n.params;const e=edgeInto(n.uid,'in');if(!e)throw new Error('El semitono no tiene entrada');const doc=nodeDom(n.uid);const sc=W/doc.w;
   const src=nodePixels(e.from,W,H);const s=Math.max(+P.size*sc,1.5),a=+P.angle*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a);const sh=Math.round(+P.shape);
   const rotf=(x,y,t)=>[Math.cos(t)*x-Math.sin(t)*y,Math.sin(t)*x+Math.cos(t)*y];
   let qx0=1e9,qy0=1e9,qx1=-1e9,qy1=-1e9;[[0,0],[W,0],[0,H],[W,H]].forEach(([x,y])=>{const q=rotf(x,y,a);qx0=Math.min(qx0,q[0]/s);qx1=Math.max(qx1,q[0]/s);qy0=Math.min(qy0,q[1]/s);qy1=Math.max(qy1,q[1]/s);});
