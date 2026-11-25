@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>filterLab</title>
+<meta name="description" content="Filtros de impreso, pantalla, textil y analógico para tus imágenes, en el navegador.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=Familjen+Grotesk:wght@600;700&display=swap">
+<style>
+:root{--bg:#151513;--panel:#1c1b19;--line:#34322c;--fg:#ece8de;--muted:#9b968a;--accent:#4fc3d3;--ink:#0b2328;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1040px;margin:0 auto;padding:56px max(20px,env(safe-area-inset-left)) 64px}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+h1{font:700 clamp(32px,5vw,52px)/1.05 "Familjen Grotesk",system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+p.lead{max-width:62ch;color:#cfcabe;font-size:18px;margin:0 0 36px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+a.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit;text-decoration:none;transition:border-color .15s}
+a.card:hover,a.card:focus-visible{border-color:var(--accent);outline:none}
+a.card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;border-bottom:1px solid var(--line)}
+.card div{padding:16px 18px 18px}
+.card h2{font:600 21px "Familjen Grotesk",system-ui,sans-serif;margin:0 0 4px}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.tag{display:inline-block;font:500 11px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--ink);background:var(--accent);border-radius:4px;padding:2px 6px;margin-left:8px;vertical-align:middle}
+footer{margin-top:40px;color:var(--muted);font:400 13px "IBM Plex Mono",monospace}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">
+    <svg width="40" height="40" viewBox="0 0 28 28" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="#4fc3d3" stroke-width="2"/><circle cx="17" cy="11" r="7" fill="none" stroke="#e2508f" stroke-width="2"/><circle cx="14" cy="16" r="7" fill="none" stroke="#e9cf3a" stroke-width="2"/><path d="M14 2v24M2 14h24" stroke="#ece8de" stroke-width="1"/></svg>
+    <h1>filterLab</h1>
+  </div>
+  <p class="lead">Semitonos, riso, CRT, VHS, punto cruz, cianotipia y más de 60 efectos para aplicar sobre tus imágenes en el navegador. Todo corre en tu GPU y las imágenes nunca salen de tu computadora.</p>
+  <div class="grid">
+    <a class="card" href="nodos/"><img src="capturas/nodos.jpg" alt="Editor de nodos con vista previa"><div><h2>Modo nodos <span class="tag">nuevo</span></h2><p>Mapa de nodos con imágenes, mezclas, máscaras, patrones y texturas.</p></div></a>
+    <a class="card" href="clasico/"><img src="capturas/clasico.jpg" alt="Pila de filtros con vista previa"><div><h2>Modo clásico</h2><p>Una pila de filtros que se aplica de arriba hacia abajo. Rápido y simple.</p></div></a>
+  </div>
+  <footer>WebGL2 · sin instalación · funciona sin conexión abriendo el .html</footer>
+</main>
+</body>
+</html>
