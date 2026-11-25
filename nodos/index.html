@@ -54,12 +54,17 @@ header.top{grid-area:top;display:flex;align-items:center;gap:10px;flex-wrap:wrap
 .app.libmode #graph{display:none}.app.libmode .libview{display:block}.app.libmode #gpane>.pbar .fgroup>:not(#viewTabs):not(#cfgName):not(#cfgLock){display:none}.app.libmode #gpane>.pbar .fgroup:not(:has(#viewTabs)){display:none}
 /* Barras superiores flotantes sobre la mesa y la vista previa */
 .pbar.fbar{position:absolute;top:10px;left:10px;right:10px;z-index:6;background:none;border:0;padding:0;pointer-events:none;gap:8px;flex-wrap:nowrap}
-.pbar.fbar .fgroup{pointer-events:auto;display:flex;align-items:center;gap:3px;min-width:0;padding:4px 6px;background:color-mix(in srgb,var(--panel) 86%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.pbar.fbar .fgroup{pointer-events:auto;display:flex;align-items:center;gap:3px;min-width:0;padding:4px 6px;background:color-mix(in srgb,var(--panel) 80%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
 .pbar.fbar .fgroup:empty{display:none}
 #gpane>.pbar.fbar,#ppane>.pbar.fbar{flex-wrap:wrap;row-gap:6px;overflow:visible}.pbar.fbar .fr{margin-left:auto;flex-wrap:wrap;justify-content:flex-end}.pbar.fbar h3{white-space:nowrap}
 .pbar.fbar .fgroup.fl{flex-wrap:wrap}
 .pbar.fbar h3{padding:0 4px 0 6px}
-.pbar.fbar .vtabs{margin-right:2px}
+.pbar.fbar .vtabs{margin-right:2px;border:0;background:none;padding:0;gap:0}
+.pbar.fbar .vtabs button{padding:7px 16px;border-radius:7px;font-size:14px}
+.pbar.fbar .vtabs button[aria-selected="true"]{background:var(--panel-2);box-shadow:none}
+.pbar.fbar .vtabs button+button{border-left:1px solid var(--line);border-radius:0 7px 7px 0}.pbar.fbar .vtabs button:first-child[aria-selected="true"]{border-radius:7px 0 0 7px}
+.pbar.fbar .fl #undo{border-left:1px solid var(--line);border-radius:0;padding-left:10px;margin-left:2px}
+.pbar.fbar .fl{padding:3px}
 .libview{padding-top:62px}
 #pv .ptools{top:58px}
 .center.float #ppane>.pbar.fbar{position:static;padding:6px 10px;background:var(--panel);border-bottom:1px solid var(--line);pointer-events:auto}
@@ -1506,15 +1511,17 @@ function scheduleThumbs(){if(!state.thumbs)return;clearTimeout(thumbT);thumbT=se
 let thumbBuf=null;
 function renderThumbs(){
   if(!gl||!copyProg||!state.thumbs||!G.nodes.length)return;
+  /* La ficha mide TW×TH; el render conserva la proporción del documento (RW×RH) y se centra con bandas negras */
   const doc=docSize();const TW=208,TH=Math.max(40,Math.min(180,Math.round(TW*doc.h/doc.w)));
-  const {memo}=evaluate(G.nodes[0].uid,TW,TH,true);
-  if(!thumbBuf||thumbBuf.length!==TW*TH*4)thumbBuf=new Uint8ClampedArray(TW*TH*4);
+  const k=Math.min(TW/doc.w,TH/doc.h),RW=Math.max(8,Math.round(doc.w*k)),RH=Math.max(8,Math.round(doc.h*k)),ox=Math.floor((TW-RW)/2),oy=Math.floor((TH-RH)/2);
+  const {memo}=evaluate(G.nodes[0].uid,RW,RH,true);
+  if(!thumbBuf||thumbBuf.length!==RW*RH*4)thumbBuf=new Uint8ClampedArray(RW*RH*4);
   const raw=new Uint8Array(thumbBuf.buffer);
   memo.forEach((it,uid)=>{const c=world.querySelector(`.node[data-uid="${uid}"] canvas.thumb`);if(!c||!it)return;
-    gl.bindFramebuffer(gl.FRAMEBUFFER,it.fb);gl.readPixels(0,0,TW,TH,gl.RGBA,gl.UNSIGNED_BYTE,raw);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,it.fb);gl.readPixels(0,0,RW,RH,gl.RGBA,gl.UNSIGNED_BYTE,raw);
     if(c.width!==TW||c.height!==TH){c.width=TW;c.height=TH;}
-    const img=new ImageData(TW,TH);for(let y=0;y<TH;y++)img.data.set(thumbBuf.subarray((TH-1-y)*TW*4,(TH-y)*TW*4),y*TW*4);
-    c.getContext('2d').putImageData(img,0,0);});
+    const img=new ImageData(RW,RH);for(let y=0;y<RH;y++)img.data.set(thumbBuf.subarray((RH-1-y)*RW*4,(RH-y)*RW*4),y*RW*4);
+    const x=c.getContext('2d');if(RW!==TW||RH!==TH){x.fillStyle='#000';x.fillRect(0,0,TW,TH);}x.putImageData(img,ox,oy);});
   /* La ficha Imagen muestra la foto completa, aunque el lienzo la recorte */
   G.nodes.forEach(n=>{if(n.type!=='image'||n.bypass)return;const r=images.get(n.uid),c=world.querySelector(`.node[data-uid="${n.uid}"] canvas.thumb`);if(!r||!r.src||!c)return;
     const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,c.width,c.height);const k=Math.min(c.width/r.w,c.height/r.h),w=r.w*k,h=r.h*k;x.drawImage(r.src,(c.width-w)/2,(c.height-h)/2,w,h);});
