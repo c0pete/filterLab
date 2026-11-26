@@ -299,6 +299,13 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
 .dragging .drop{display:grid}
 .dlg{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:18px 20px;width:min(440px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .dlg::backdrop{background:rgba(0,0,0,.5)}
+.gedit{position:absolute;inset:0;pointer-events:none;z-index:3}.gedit[hidden]{display:none}.gedit svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
+.gedit line{stroke:#fff;stroke-width:2;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
+.gedit circle{fill:none;stroke:#fff;stroke-width:2.2;pointer-events:all;cursor:grab;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}.gedit circle.on{stroke:#4f9cff;stroke-width:3}
+.gedit rect{fill:#fff;pointer-events:all;cursor:ew-resize;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
+.ge-bar{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);pointer-events:auto;display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 85%,transparent);backdrop-filter:blur(8px);font-size:12.5px;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.ge-bar label{display:flex;align-items:center;gap:6px;color:var(--muted)}.ge-bar input[type=range]{width:110px;accent-color:#a29e94}.ge-bar output{font:500 11px var(--f-mono);min-width:26px;color:var(--fg)}
+.ge-sw{width:22px;height:22px;border-radius:50%;border:2px solid #fff;cursor:pointer;padding:0;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
 .dlg.keys{width:min(560px,calc(100vw - 32px))}.kgrid{display:grid;grid-template-columns:max-content 1fr;gap:7px 14px;align-items:baseline;font-size:13px}
 .kgrid h4{grid-column:1/-1;margin:8px 0 0;font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .kgrid kbd{font:500 11.5px var(--f-mono);background:var(--panel-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:2px 7px;white-space:nowrap;justify-self:start}
@@ -403,7 +410,7 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
         </div>
         <button class="ib" id="orient" title="Cambiar a paneles arriba y abajo" aria-label="Cambiar orientación de paneles"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2.5" width="12" height="11" rx="1"/><path d="M8 2.5v11"/></svg></button>
       </div>
-      <div class="pv" id="pv"><canvas id="cv" width="16" height="16"></canvas><div class="drop">Soltá la imagen para cargarla en el nodo Imagen</div><div class="cmpline" id="cmpLine" hidden><span class="cl-a">Antes</span><span class="cl-b">Después</span><i></i></div><svg class="povl" id="povl" aria-hidden="true"><circle id="pcur" r="10" fill="none" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke" style="mix-blend-mode:difference" visibility="hidden"/><polyline id="plasso" fill="rgba(79,195,211,.15)" stroke="#4fc3d3" stroke-width="1.4" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" points=""/></svg>
+      <div class="pv" id="pv"><canvas id="cv" width="16" height="16"></canvas><div class="drop">Soltá la imagen para cargarla en el nodo Imagen</div><div class="gedit" id="gedit" hidden><svg><line id="geL"/><rect id="geM" width="9" height="9"/><circle id="geA" r="5"/><circle id="geB" r="8"/></svg><div class="ge-bar" id="geBar"><span id="geLbl">Punto B</span><button class="ge-sw" id="geSw" title="Cambiar color (o doble clic en el punto)"></button><label>Opacidad <input type="range" id="geOp" min="0" max="100" value="100"><output id="geOpV">100</output></label></div><input type="color" id="geCol" hidden></div><div class="cmpline" id="cmpLine" hidden><span class="cl-a">Antes</span><span class="cl-b">Después</span><i></i></div><svg class="povl" id="povl" aria-hidden="true"><circle id="pcur" r="10" fill="none" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke" style="mix-blend-mode:difference" visibility="hidden"/><polyline id="plasso" fill="rgba(79,195,211,.15)" stroke="#4fc3d3" stroke-width="1.4" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" points=""/></svg>
         <div class="ptools" id="ptools" hidden role="toolbar" aria-label="Herramientas de pintura">
           <div class="seg" id="ptTool">
             <button data-t="brush" title="Pincel (B)" aria-label="Pincel"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5 9 11"/><path d="M8.5 11.5c-2 0-3.5 1.4-3.5 3.3 0 .9-.6 1.6-1.5 1.7 3.4 1 6.9-.3 6.9-3.3"/></svg></button>
@@ -1010,12 +1017,14 @@ const NT={
  color:{name:'Color',cat:'basicos',desc:'Un color plano',inputs:[],params:[C('color','Color','#e2508f')],
   glsl:`vec4 node(vec2 uv){return vec4(p_color,1.);}`},
  gradient:{name:'Degradado',cat:'basicos',desc:'Lineal, radial o rombo entre dos colores',inputs:[],
-  params:[S('type','Tipo',['Lineal','Radial','Rombo (diamante)']),C('c1','Color A','#1d1b4f'),C('c2','Color B','#ffb86b'),R('angle','Ángulo',0,360,90,1,'°'),R('mid','Punto medio',.05,.95,.5,.01)],
-  glsl:`vec4 node(vec2 uv){float asp=u_res.x/u_res.y;vec2 p=(uv-.5)*vec2(asp,1.);float t;
-   if(p_type<.5){float a=radians(p_angle);vec2 d=vec2(cos(a),sin(a));float ext=abs(d.x)*asp*.5+abs(d.y)*.5;t=dot(p,d)/ext*.5+.5;}
-   else if(p_type<1.5)t=length(p)/(.5*length(vec2(asp,1.)));
-   else{vec2 r=rot(p,radians(p_angle-90.));t=(abs(r.x)+abs(r.y))/(.5*(asp+1.));}
-   t=clamp(t,0.,1.);t=t<p_mid?t/p_mid*.5:.5+(t-p_mid)/(1.-p_mid)*.5;return vec4(mix(p_c1,p_c2,t),1.);}`},
+  /* Se edita sobre la vista previa: arrastrá los puntos, doble clic en un punto cambia su color, el cuadradito mueve el punto medio */
+  params:[S('type','Tipo',['Lineal','Radial','Rombo (diamante)']),C('c1','Color A','#1d1b4f'),R('a1','Opacidad A',0,1,1,.01),C('c2','Color B','#ffb86b'),R('a2','Opacidad B',0,1,1,.01),R('mid','Punto medio',.05,.95,.5,.01),
+   Object.assign(R('x1','',-1,2,.5,.001),{hid:1}),Object.assign(R('y1','',-1,2,0,.001),{hid:1}),Object.assign(R('x2','',-1,2,.5,.001),{hid:1}),Object.assign(R('y2','',-1,2,1,.001),{hid:1})],
+  glsl:`vec4 node(vec2 uv){vec2 S=vec2(u_res.x/u_res.y,1.);vec2 p=uv*S,A=vec2(p_x1,p_y1)*S,B=vec2(p_x2,p_y2)*S;vec2 d=B-A;float L=max(length(d),1e-4);float t;
+   if(p_type<.5)t=dot(p-A,d)/(L*L);
+   else if(p_type<1.5)t=length(p-A)/L;
+   else{vec2 r=rot(p-A,-atan(d.y,d.x)+.785398);t=(abs(r.x)+abs(r.y))/(L*1.41421);}
+   t=clamp(t,0.,1.);t=t<p_mid?t/p_mid*.5:.5+(t-p_mid)/(1.-p_mid)*.5;return vec4(mix(p_c1,p_c2,t),mix(p_a1,p_a2,t));}`},
  blend:{name:'Mezclar',cat:'basicos',desc:'Funde un frente sobre un fondo, con modo, opacidad y máscara. Para mover o escalar el frente, poné un Transformar antes',inputs:[{k:'a',l:'Fondo'},{k:'b',l:'Frente'},{k:'mask',l:'Máscara',mask:1}],
   params:[S('mode','Fusión',BLEND_NAMES,0),R('opacity','Opacidad',0,1,1,.01)],
   glsl:`vec4 node(vec2 uv){vec4 A=texture(u_t0,uv);vec3 a=u_has0==1?A.rgb:vec3(0.);float aa=u_has0==1?A.a:0.;if(u_has1==0)return vec4(a,u_has0==1?aa:1.);
@@ -1470,7 +1479,7 @@ function renderPreview(){
   const cw=doc.w*z/dpr,ch=doc.h*z/dpr;
   cv.style.width=cw+'px';cv.style.height=ch+'px';placeCv(r,cw,ch);
   $('#pzl').textContent=Math.round(z*100)+'%';{const zr=$('#pzr');if(document.activeElement!==zr)zr.value=Math.round(z*4)*25;}
-  cv.classList.toggle('pix',z>rs*1.01);placeOverlay();placeCmp();if(paintUid)syncTools();
+  cv.classList.toggle('pix',z>rs*1.01);placeOverlay();placeCmp();placeGradEdit();if(paintUid)syncTools();
   const n=t&&byId(t);
   $('#info').textContent=`${doc.w}×${doc.h} px · ${Math.round(z*100)}% · ${lastMs.toFixed(0)} ms`;
   const tag=$('#viewingTag');
@@ -1491,7 +1500,7 @@ pv.addEventListener('dblclick',()=>{if(paintUid)return;pview.zoom='fit';setZoomS
 function pvDoc(){const t=previewTarget();return t!=null&&byId(t)?nodeDom(t):docSize();}
 /* Alinea el canvas a píxeles físicos para que no se vea borroso */
 function placeCv(r,cw,ch){const d=window.devicePixelRatio||1,sx=v=>Math.round((r.left+v)*d)/d-r.left,sy=v=>Math.round((r.top+v)*d)/d-r.top;cv.style.left=sx(r.width/2-cw/2+pview.px)+'px';cv.style.top=sy(r.height/2-ch/2+pview.py)+'px';}
-function positionCanvasOnly(){const r=pv.getBoundingClientRect();const doc=pvDoc(),d=window.devicePixelRatio||1;const cw=doc.w*pview.z/d,ch=doc.h*pview.z/d;placeCv(r,cw,ch);placeOverlay();placeCmp();}
+function positionCanvasOnly(){requestAnimationFrame(()=>placeGradEdit());const r=pv.getBoundingClientRect();const doc=pvDoc(),d=window.devicePixelRatio||1;const cw=doc.w*pview.z/d,ch=doc.h*pview.z/d;placeCv(r,cw,ch);placeOverlay();placeCmp();}
 /* ============================================================
    Pintura: la vista previa funciona como lienzo del nodo Pintura
    Cada trazo terminado crea una versión inmutable (paintData) y el nodo guarda solo su id (n.pv),
@@ -1635,7 +1644,7 @@ function renderThumbs(){
   const TW=208,doms=new Map(G.nodes.map(n=>[n.uid,nodeDom(n.uid)]));let k=0,mx=1;
   doms.forEach(d=>{k=Math.max(k,Math.min(TW/d.w,180/d.h));mx=Math.max(mx,d.w,d.h);});k=Math.min(k,720/mx);
   const o=outputNode(),od=o?doms.get(o.uid):docSize();
-  const {memo}=evaluate(G.nodes[0].uid,1,1,true,k);
+  const d0=doms.get(G.nodes[0].uid)||od;const {memo}=evaluate(G.nodes[0].uid,Math.max(1,Math.round(d0.w*k)),Math.max(1,Math.round(d0.h*k)),true,k);
   if(!thumbCv)thumbCv=document.createElement('canvas');
   memo.forEach((it,uid)=>{const c=world.querySelector(`.node[data-uid="${uid}"] canvas.thumb`);if(!c||!it)return;const d=doms.get(uid)||od;
     const TH=Math.max(40,Math.min(180,Math.round(TW*d.h/d.w))),RW=it.w,RH=it.h;
@@ -1839,7 +1848,7 @@ function makeNode(n){
   return d;
 }
 function markSelection(){if(sel==null&&!dragBoxActive)selSet.clear();else if(sel!=null&&!selSet.has(sel))selSet=new Set([sel]);[...selSet].forEach(u=>{if(!byId(u))selSet.delete(u);});
-  world.querySelectorAll('.node').forEach(e=>e.classList.toggle('sel',selSet.has(+e.dataset.uid)));markViewing();}
+  world.querySelectorAll('.node').forEach(e=>e.classList.toggle('sel',selSet.has(+e.dataset.uid)));markViewing();if(typeof placeGradEdit==='function')placeGradEdit();}
 let dragBoxActive=false;
 function markViewing(){world.querySelectorAll('.node').forEach(e=>{const v=+e.dataset.uid===previewUid;e.classList.toggle('viewing',v);});}
 function togglePreview(uid){const n=byId(uid);previewUid=(previewUid===uid||(n&&n.type==='output'))?null:uid;markViewing();scheduleRender();}
@@ -2243,6 +2252,9 @@ function migrateGraph(g){if(!g||!g.nodes)return g;let next=Math.max(0,...g.nodes
   g.nodes.slice().forEach(n=>{if(n.type!=='blend'||!n.params)return;const P=n.params,sc=P.scale==null?1:+P.scale,tx=+P.tx||0,ty=+P.ty||0;if(sc===1&&!tx&&!ty)return;
     const e=g.edges.find(e=>e.to===n.uid&&e.port==='b');delete P.scale;delete P.tx;delete P.ty;if(!e)return;
     const t={uid:next++,type:'transform',x:(n.x||0)-240,y:(n.y||0)+200,params:{scale:sc,tx,ty}};g.nodes.push(t);g.edges.push({from:e.from,to:t.uid,port:'in'});e.from=t.uid;});
+  /* Degradado viejo con ángulo: pasa a dos puntos */
+  g.nodes.forEach(n=>{if(n.type!=='gradient'||!n.params||n.params.angle==null||n.params.x1!=null)return;const a=+n.params.angle*Math.PI/180,c=Math.cos(a)*.5,sn=Math.sin(a)*.5;
+    if(+n.params.type===0)Object.assign(n.params,{x1:.5-c,y1:.5-sn,x2:.5+c,y2:.5+sn});else if(+n.params.type===1)Object.assign(n.params,{x1:.5,y1:.5,x2:.5+c,y2:.5+sn});else Object.assign(n.params,{x1:.5,y1:.5,x2:.5+c,y2:.5+sn});delete n.params.angle;});
   /* Pintura con opacidad: pasa a un nodo Opacidad a continuación */
   g.nodes.slice().forEach(n=>{if(n.type!=='paint'||!n.params||n.params.opacity==null)return;const op=+n.params.opacity;delete n.params.opacity;if(!(op<1))return;
     const o={uid:next++,type:'opacity',x:(n.x||0)+120,y:(n.y||0)+220,params:{op}};g.nodes.push(o);g.edges.filter(e=>e.from===n.uid).forEach(e=>e.from=o.uid);g.edges.push({from:n.uid,to:o.uid,port:'in'});});
@@ -2553,6 +2565,29 @@ $('#libview').addEventListener('dragover',e=>{e.preventDefault();$('#libview').c
 $('#libview').addEventListener('dragleave',e=>{if(e.target===$('#libview'))$('#libview').classList.remove('drag');});
 $('#libview').addEventListener('drop',e=>{e.preventDefault();$('#libview').classList.remove('drag');const fs=[...e.dataTransfer.files];if(fs.length)importFiles(fs,false);});
 
+/* Editor de degradado sobre la vista previa */
+let geStop='b';
+function geNode(){const n=sel!=null&&byId(sel);return n&&n.type==='gradient'&&!paintUid?n:null;}
+function placeGradEdit(){const ge=$('#gedit');const n=geNode();ge.hidden=!n;if(!n)return;const P=n.params;const pr=pv.getBoundingClientRect(),cr=cv.getBoundingClientRect();
+  const X=u=>cr.left-pr.left+u*cr.width,Y=v=>cr.top-pr.top+(1-v)*cr.height;const ax=X(+P.x1),ay=Y(+P.y1),bx=X(+P.x2),by=Y(+P.y2),m=+P.mid;
+  const L=$('#geL');L.setAttribute('x1',ax);L.setAttribute('y1',ay);L.setAttribute('x2',bx);L.setAttribute('y2',by);
+  const A=$('#geA'),B=$('#geB');A.setAttribute('cx',ax);A.setAttribute('cy',ay);B.setAttribute('cx',bx);B.setAttribute('cy',by);A.classList.toggle('on',geStop==='a');B.classList.toggle('on',geStop==='b');
+  const M=$('#geM');M.setAttribute('x',ax+(bx-ax)*m-4.5);M.setAttribute('y',ay+(by-ay)*m-4.5);
+  $('#geLbl').textContent=geStop==='a'?'Punto A':'Punto B';$('#geSw').style.background=geStop==='a'?P.c1:P.c2;const op=Math.round((geStop==='a'?+P.a1:+P.a2)*100);if(document.activeElement!==$('#geOp'))$('#geOp').value=op;$('#geOpV').textContent=op;}
+function geUV(e){const cr=cv.getBoundingClientRect();return{u:(e.clientX-cr.left)/cr.width,v:1-(e.clientY-cr.top)/cr.height};}
+function geChanged(final){scheduleRender();scheduleThumbs();placeGradEdit();if(final){pushHistory();buildGraphDOM();}}
+['geA','geB','geM'].forEach(id=>{const el=$('#'+id);el.addEventListener('pointerdown',e=>{const n=geNode();if(!n)return;e.stopPropagation();e.preventDefault();if(id!=='geM'){geStop=id==='geA'?'a':'b';placeGradEdit();}
+  el.setPointerCapture(e.pointerId);let moved=false;const P=n.params;
+  el.onpointermove=ev=>{moved=true;const q=geUV(ev);if(id==='geA'){P.x1=+q.u.toFixed(4);P.y1=+q.v.toFixed(4);}else if(id==='geB'){P.x2=+q.u.toFixed(4);P.y2=+q.v.toFixed(4);}
+    else{const cr=cv.getBoundingClientRect(),S=cr.width/cr.height;const ax=P.x1*S,ay=+P.y1,dx=(P.x2-P.x1)*S,dy=P.y2-P.y1,t=((q.u*S-ax)*dx+(q.v-ay)*dy)/Math.max(dx*dx+dy*dy,1e-6);P.mid=+Math.min(.95,Math.max(.05,t)).toFixed(3);}geChanged(false);};
+  el.onpointerup=()=>{el.onpointermove=null;if(moved)geChanged(true);};});});
+['geA','geB'].forEach(id=>$('#'+id).addEventListener('dblclick',e=>{e.stopPropagation();geStop=id==='geA'?'a':'b';const n=geNode();if(!n)return;const c=$('#geCol');c.value=geStop==='a'?n.params.c1:n.params.c2;c.click();}));
+['pointerdown','dblclick','wheel'].forEach(ev=>$('#geBar').addEventListener(ev,e=>e.stopPropagation()));
+$('#geSw').onclick=()=>{const n=geNode();if(!n)return;const c=$('#geCol');c.value=geStop==='a'?n.params.c1:n.params.c2;c.click();};
+$('#geCol').addEventListener('input',e=>{const n=geNode();if(!n)return;n.params[geStop==='a'?'c1':'c2']=e.target.value;geChanged(false);});
+$('#geCol').addEventListener('change',()=>geChanged(true));
+$('#geOp').addEventListener('input',e=>{const n=geNode();if(!n)return;n.params[geStop==='a'?'a1':'a2']=+e.target.value/100;geChanged(false);});
+$('#geOp').addEventListener('change',()=>geChanged(true));
 function toggleKeys(){const d=$('#keysDlg');d.open?d.close():d.showModal();}
 $('#keysBtn').onclick=toggleKeys;$('#keysClose').onclick=()=>$('#keysDlg').close();
 /* Minimapa de la mesa */
