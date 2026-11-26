@@ -300,10 +300,11 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
 .dragging .drop{display:grid}
 .dlg{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:18px 20px;width:min(440px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .dlg::backdrop{background:rgba(0,0,0,.5)}
-.gctl{padding:4px 2px 2px}.gtrack{position:relative;height:20px;border-radius:4px;margin:14px 7px 0;background:repeating-conic-gradient(#3a3a3a 0 25%,#262626 0 50%) 0 0/10px 10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.thw{position:relative}.gctl{position:absolute;left:14px;right:14px;bottom:12px;padding:12px 8px 1px;border-radius:6px;background:rgba(20,20,18,.72);backdrop-filter:blur(4px)}.nothumbs .thw .gctl{position:static;margin:4px 8px}
+.gtrack{position:relative;height:16px;border-radius:4px;margin:0 7px;background:repeating-conic-gradient(#3a3a3a 0 25%,#262626 0 50%) 0 0/10px 10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
 .gfill{position:absolute;inset:0;border-radius:4px}
 .gmid{position:absolute;top:-11px;width:9px;height:9px;margin-left:-4.5px;padding:0;border:1.5px solid var(--fg);background:var(--panel);transform:rotate(45deg);cursor:ew-resize;touch-action:none}
-.gstops{position:relative;height:18px;margin:2px 7px 6px}.gst{position:absolute;top:0;width:14px;height:14px;margin-left:-7px;padding:0;border-radius:3px;border:2px solid var(--muted);background:var(--c);cursor:pointer}
+.gstops{position:relative;height:16px;margin:2px 7px 4px}.gst{position:absolute;top:0;width:14px;height:14px;margin-left:-7px;padding:0;border-radius:3px;border:2px solid var(--muted);background:var(--c);cursor:pointer}
 .gst[data-s=a]{left:0}.gst[data-s=b]{left:100%}.gst.on{border-color:#fff;box-shadow:0 0 0 1.5px #4f9cff}
 .gst::before{content:"";position:absolute;left:50%;top:-6px;margin-left:-4px;border:4px solid transparent;border-bottom-color:var(--muted)}.gst.on::before{border-bottom-color:#fff}
 .gedit{position:absolute;inset:0;pointer-events:none;z-index:3}.gedit[hidden]{display:none}.gedit svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
@@ -1027,7 +1028,7 @@ const NT={
  gradient:{name:'Degradado',cat:'basicos',desc:'Lineal, radial o rombo entre dos colores',inputs:[],
   /* Colores, opacidad y punto medio en la barra de la ficha; dirección y extensión arrastrando los puntos sobre la vista previa */
   gbar:true,
-  params:[S('type','Tipo',['Lineal','Radial','Rombo (diamante)']),Object.assign(C('c1','Color A','#1d1b4f'),{hid:1}),Object.assign(R('a1','Opacidad A',0,1,1,.01),{hid:1}),Object.assign(C('c2','Color B','#ffb86b'),{hid:1}),Object.assign(R('a2','Opacidad B',0,1,1,.01),{hid:1}),Object.assign(R('mid','Punto medio',.05,.95,.5,.01),{hid:1}),
+  params:[S('type','Tipo',['Lineal','Radial','Rombo (diamante)']),Object.assign(C('c1','Color A','#1d1b4f'),{hid:1}),R('a1','Opacidad A',0,1,1,.01),Object.assign(C('c2','Color B','#ffb86b'),{hid:1}),R('a2','Opacidad B',0,1,1,.01),Object.assign(R('mid','Punto medio',.05,.95,.5,.01),{hid:1}),
    Object.assign(R('x1','',-1,2,.5,.001),{hid:1}),Object.assign(R('y1','',-1,2,0,.001),{hid:1}),Object.assign(R('x2','',-1,2,.5,.001),{hid:1}),Object.assign(R('y2','',-1,2,1,.001),{hid:1})],
   glsl:`vec4 node(vec2 uv){vec2 S=vec2(u_res.x/u_res.y,1.);vec2 p=uv*S,A=vec2(p_x1,p_y1)*S,B=vec2(p_x2,p_y2)*S;vec2 d=B-A;float L=max(length(d),1e-4);float t;
    if(p_type<.5)t=dot(p-A,d)/(L*L);
@@ -1840,7 +1841,7 @@ function makeNode(n){
   ports.appendChild(pins);
   if(!T.noOut){const po=el('div','pout');const dot=el('span','dot');dot.dataset.uid=n.uid;dot.dataset.dir='out';po.append(document.createTextNode('Salida'),dot);ports.appendChild(po);}else ports.appendChild(el('span'));
   d.appendChild(ports);
-  const th=el('canvas','thumb');th.title='Doble clic: ver en la vista previa';th.addEventListener('dblclick',e=>{e.stopPropagation();togglePreview(n.uid);});th.width=208;th.height=138;d.appendChild(th);
+  const th=el('canvas','thumb');th.title='Doble clic: ver en la vista previa';th.addEventListener('dblclick',e=>{e.stopPropagation();togglePreview(n.uid);});th.width=208;th.height=138;if(T.gbar){const tw=el('div','thw');tw.append(th,gradCtl(n));d.appendChild(tw);}else d.appendChild(th);
   const err=el('div','nerr');err.hidden=true;d.appendChild(err);
   const body=el('div','nb');
   if(T.image){const row=el('div','imgrow');const b=el('button','btn small','Cargar imagen…');b.onclick=()=>{nodeFileTarget=n.uid;$('#nodeFileIn').click();};
@@ -1850,7 +1851,6 @@ function makeNode(n){
   if(T.filter&&T.filter.wheel)body.appendChild(wheelCtl(n));
   if(T.filter&&T.filter.curves)body.appendChild(curvesCtl(n));
   T.params.forEach(p=>{if(p.hid)return;if(p.gk!=null&&p.g!==Math.round(+n.params[p.gk]))return;if(p.show&&!p.show(n.params))return;body.appendChild(paramCtl(p,n));});
-  if(T.gbar)body.appendChild(gradCtl(n));
   if(body.childNodes.length)d.appendChild(body);
   d.addEventListener('pointerdown',e=>{if(e.button!==0||spaceDown)return;selEdge=-1;
     if(e.shiftKey){if(selSet.has(n.uid)){selSet.delete(n.uid);sel=selSet.size?[...selSet].pop():null;}else{selSet.add(n.uid);sel=n.uid;}}
@@ -1923,7 +1923,7 @@ function curvesCtl(n){const P=n.params;const S=176,dpr=window.devicePixelRatio||
     if(i>0&&i<a.length-1){a.splice(i,1);P._cv=JSON.stringify(cv);draw();scheduleRender();pushHistory();}});
   draw();return w;}
 const wheelDraw=new Map();
-function paramHook(n,p){const T=NT[n.type];if(T.filter&&T.filter.onParam)T.filter.onParam(n.params,p.k,n);if(T.onParam&&T.onParam(n.params,p.k,n))buildGraphDOM();const f=wheelDraw.get(n.uid);if(f)f();}
+function paramHook(n,p){if(n.type==='gradient'&&typeof syncGCard==='function')syncGCard();const T=NT[n.type];if(T.filter&&T.filter.onParam)T.filter.onParam(n.params,p.k,n);if(T.onParam&&T.onParam(n.params,p.k,n))buildGraphDOM();const f=wheelDraw.get(n.uid);if(f)f();}
 function hslHex(h,s,l){const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return `rgb(${Math.round(f(0)*255)},${Math.round(f(8)*255)},${Math.round(f(4)*255)})`;}
 /* Rueda de colores del nodo Reemplazar colores: cada punto es un color; en una armonía se mueven todos juntos */
 function wheelCtl(n){const P=n.params;const S=156,dpr=window.devicePixelRatio||1,R=S/2-10,C=S/2;
@@ -1947,17 +1947,14 @@ function wheelCtl(n){const P=n.params;const S=156,dpr=window.devicePixelRatio||1
   const up=()=>{if(dragI>=0){dragI=-1;pushHistory();}};c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);c.addEventListener('dblclick',e=>e.stopPropagation());
   wheelDraw.set(n.uid,draw);draw();return w;}
 /* Barra de degradado en la ficha: paradas A y B, doble clic cambia el color, rombo = punto medio, opacidad de la parada elegida */
-function gradCtl(n){const P=n.params;const w=el('div','gctl');w.innerHTML=`<div class="gtrack"><div class="gfill"></div><button class="gmid" title="Punto medio (arrastrá)"></button></div><div class="gstops"><button class="gst" data-s="a" title="Color A: clic para elegir, doble clic para cambiar el color"></button><button class="gst" data-s="b" title="Color B: clic para elegir, doble clic para cambiar el color"></button></div>
-  <div class="prm"><label>Opacidad <span class="gwho"></span></label><output></output><input type="range" min="0" max="1" step=".01"></div><input type="color" hidden>`;
-  const fill=w.querySelector('.gfill'),mid=w.querySelector('.gmid'),st=[...w.querySelectorAll('.gst')],rng=w.querySelector('input[type=range]'),out=w.querySelector('output'),who=w.querySelector('.gwho'),col=w.querySelector('input[type=color]');
+function gradCtl(n){const P=n.params;const w=el('div','gctl');w.innerHTML=`<div class="gtrack"><div class="gfill"></div><button class="gmid" title="Punto medio (arrastrá)"></button></div><div class="gstops"><button class="gst" data-s="a" title="Color A: doble clic para cambiarlo"></button><button class="gst" data-s="b" title="Color B: doble clic para cambiarlo"></button></div><input type="color" hidden>`;
+  const fill=w.querySelector('.gfill'),mid=w.querySelector('.gmid'),st=[...w.querySelectorAll('.gst')],col=w.querySelector('input[type=color]');
   const draw=()=>{fill.style.background=`linear-gradient(90deg,${hexA(P.c1,P.a1)},${(+P.mid*100).toFixed(1)}%,${hexA(P.c2,P.a2)})`;mid.style.left=(+P.mid*100)+'%';
-    st[0].style.setProperty('--c',P.c1);st[1].style.setProperty('--c',P.c2);st.forEach(b=>b.classList.toggle('on',b.dataset.s===geStop));
-    const k=geStop==='a'?'a1':'a2';if(document.activeElement!==rng)rng.value=P[k];out.textContent=Math.round(P[k]*100)+'%';who.textContent=geStop==='a'?'A':'B';};
+    st[0].style.setProperty('--c',P.c1);st[1].style.setProperty('--c',P.c2);st.forEach(b=>b.classList.toggle('on',b.dataset.s===geStop));};
   const upd=fin=>{draw();scheduleRender();scheduleThumbs();if(typeof placeGradEdit==='function')placeGradEdit();if(fin)pushHistory();};
-  w._draw=draw;w.addEventListener('pointerdown',e=>e.stopPropagation());
+  w._draw=draw;['pointerdown','dblclick'].forEach(t=>w.addEventListener(t,e=>e.stopPropagation()));
   st.forEach(b=>{b.onclick=()=>{geStop=b.dataset.s;draw();placeGradEdit();};b.ondblclick=()=>{geStop=b.dataset.s;draw();col.value=geStop==='a'?P.c1:P.c2;col.click();};});
   col.oninput=()=>{P[geStop==='a'?'c1':'c2']=col.value;upd(false);};col.onchange=()=>upd(true);
-  rng.oninput=()=>{P[geStop==='a'?'a1':'a2']=+rng.value;upd(false);};rng.onchange=()=>upd(true);
   mid.addEventListener('pointerdown',e=>{e.preventDefault();mid.setPointerCapture(e.pointerId);const r=w.querySelector('.gtrack').getBoundingClientRect();let mv=false;
     mid.onpointermove=ev=>{mv=true;P.mid=+Math.min(.95,Math.max(.05,(ev.clientX-r.left)/r.width)).toFixed(3);upd(false);};mid.onpointerup=()=>{mid.onpointermove=null;if(mv)upd(true);};});
   mid.ondblclick=()=>{P.mid=.5;upd(true);};
