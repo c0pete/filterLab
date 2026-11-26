@@ -31,7 +31,7 @@ python3 -m http.server 8000
 ## Qué trae
 
 **Modo nodos** (la biblioteca está agrupada por función en un acordeón, con colores cian para herramientas, magenta para patrones y texturas, y amarillo para estilos)
-- **Entrada:** Imagen (carga a tamaño original; se escala o mueve con Transformar y se combina con Mezclar), Texto (con fuentes de Google Fonts, degradado, contorno y texto en curva), Pintura (pincel, goma, lazo, balde y cuentagotas sobre la vista previa; sale como color o como máscara), Color, Degradado (lineal, radial o rombo) y Salida.
+- **Entrada:** Imagen (carga a tamaño original; se escala o mueve con Transformar y se combina con Mezclar), Texto (con fuentes de Google Fonts, degradado, contorno y texto en curva), Pintura (pincel, goma, lazo, balde y cuentagotas sobre la vista previa; sale como color o como máscara), Color, Degradado (lineal, radial o rombo; se edita sobre la vista previa: arrastrás los puntos, doble clic cambia el color y la barra de abajo ajusta la opacidad de cada punto) y Salida.
 - **Ajustes:** Ajustes, Curvas (general y por canal), Mapa de degradado, Niveles, Tono y saturación, Invertir, Posterizar, Umbral, Mezclador de canales, Corrección selectiva y Reemplazar colores (posteriza y asigna colores desde una rueda con armonías).
 - **Composición:** Opacidad, Mezclar (modo, opacidad y máscara; para mover o escalar el frente se usa Transformar), Máscara de luminancia, Separar y Unir canales y Desvío.
 - **Efectos:** Sombra paralela, Resplandor exterior, Borde (marco plano o degradado), Detectar bordes, desenfoque gaussiano, de movimiento y radial, Brillo (bloom), Ruido, Nitidez y Viñeta.
