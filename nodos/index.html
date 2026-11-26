@@ -277,7 +277,7 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
 /* Vista previa */
 .pv{flex:1;position:relative;overflow:hidden;background:repeating-conic-gradient(#141413 0 25%,#111110 0 50%) 0 0/22px 22px;touch-action:none;cursor:grab}
 .pv.panning{cursor:grabbing}
-.pv canvas{position:absolute;left:0;top:0;box-shadow:0 0 0 1px #000,0 10px 40px rgba(0,0,0,.5);background:#000}
+.pv canvas{position:absolute;left:0;top:0;box-shadow:0 0 0 1px #000,0 10px 40px rgba(0,0,0,.5);background:repeating-conic-gradient(#3a3a3a 0 25%,#262626 0 50%) 0 0/16px 16px}
 .pv canvas.pix{image-rendering:pixelated}
 .pv.painting{cursor:crosshair}.pv.painting.nocur{cursor:none}
 .povl{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;display:none}.pv.painting .povl{display:block}
@@ -302,7 +302,8 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
 .gedit{position:absolute;inset:0;pointer-events:none;z-index:3}.gedit[hidden]{display:none}.gedit svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
 .gedit line{stroke:#fff;stroke-width:2;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
 .gedit circle{fill:none;stroke:#fff;stroke-width:2.2;pointer-events:all;cursor:grab;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}.gedit circle.on{stroke:#4f9cff;stroke-width:3}
-.gedit rect{fill:#fff;pointer-events:all;cursor:ew-resize;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
+.gedit #teBox{fill:transparent;stroke:#fff;stroke-width:1.2;stroke-dasharray:5 4;cursor:move;pointer-events:all;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.8))}
+.gedit rect#geM{fill:#fff;pointer-events:all;cursor:ew-resize;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
 .ge-bar{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);pointer-events:auto;display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 85%,transparent);backdrop-filter:blur(8px);font-size:12.5px;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.35)}
 .ge-bar label{display:flex;align-items:center;gap:6px;color:var(--muted)}.ge-bar input[type=range]{width:110px;accent-color:#a29e94}.ge-bar output{font:500 11px var(--f-mono);min-width:26px;color:var(--fg)}
 .ge-sw{width:22px;height:22px;border-radius:50%;border:2px solid #fff;cursor:pointer;padding:0;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
@@ -410,7 +411,7 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
         </div>
         <button class="ib" id="orient" title="Cambiar a paneles arriba y abajo" aria-label="Cambiar orientación de paneles"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2.5" width="12" height="11" rx="1"/><path d="M8 2.5v11"/></svg></button>
       </div>
-      <div class="pv" id="pv"><canvas id="cv" width="16" height="16"></canvas><div class="drop">Soltá la imagen para cargarla en el nodo Imagen</div><div class="gedit" id="gedit" hidden><svg><line id="geL"/><rect id="geM" width="9" height="9"/><circle id="geA" r="5"/><circle id="geB" r="8"/></svg><div class="ge-bar" id="geBar"><span id="geLbl">Punto B</span><button class="ge-sw" id="geSw" title="Cambiar color (o doble clic en el punto)"></button><label>Opacidad <input type="range" id="geOp" min="0" max="100" value="100"><output id="geOpV">100</output></label></div><input type="color" id="geCol" hidden></div><div class="cmpline" id="cmpLine" hidden><span class="cl-a">Antes</span><span class="cl-b">Después</span><i></i></div><svg class="povl" id="povl" aria-hidden="true"><circle id="pcur" r="10" fill="none" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke" style="mix-blend-mode:difference" visibility="hidden"/><polyline id="plasso" fill="rgba(79,195,211,.15)" stroke="#4fc3d3" stroke-width="1.4" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" points=""/></svg>
+      <div class="pv" id="pv"><canvas id="cv" width="16" height="16"></canvas><div class="drop">Soltá la imagen para cargarla en el nodo Imagen</div><div class="gedit" id="gedit" hidden><svg><rect id="teBox"/><line id="geL"/><rect id="geM" width="9" height="9"/><circle id="geA" r="5"/><circle id="geB" r="8"/></svg><div class="ge-bar" id="geBar"><span id="geLbl">Punto B</span><button class="ge-sw" id="geSw" title="Cambiar color (o doble clic en el punto)"></button><label>Opacidad <input type="range" id="geOp" min="0" max="100" value="100"><output id="geOpV">100</output></label></div><input type="color" id="geCol" hidden></div><div class="cmpline" id="cmpLine" hidden><span class="cl-a">Antes</span><span class="cl-b">Después</span><i></i></div><svg class="povl" id="povl" aria-hidden="true"><circle id="pcur" r="10" fill="none" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke" style="mix-blend-mode:difference" visibility="hidden"/><polyline id="plasso" fill="rgba(79,195,211,.15)" stroke="#4fc3d3" stroke-width="1.4" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" points=""/></svg>
         <div class="ptools" id="ptools" hidden role="toolbar" aria-label="Herramientas de pintura">
           <div class="seg" id="ptTool">
             <button data-t="brush" title="Pincel (B)" aria-label="Pincel"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5 9 11"/><path d="M8.5 11.5c-2 0-3.5 1.4-3.5 3.3 0 .9-.6 1.6-1.5 1.7 3.4 1 6.9-.3 6.9-3.3"/></svg></button>
@@ -1185,8 +1186,8 @@ const NT={
    B('grad','Degradado'),C('color2','Color 2','#4fc3d3'),R('gang','Ángulo del degradado',0,360,90,1,'°'),
    R('sw','Contorno',0,40,0,.5,'px'),C('sc','Color del contorno','#000000'),
    ],
-  glsl:`vec4 node(vec2 uv){vec3 base=u_has0==1?texture(u_t0,uv).rgb:vec3(0.);if(u_hasimg==0)return u_has0==1?vec4(base,1.):vec4(0.);vec4 t=texture(u_img,uv);if(u_has0==0)return vec4(t.rgb,t.a);
-   return vec4(mix(base,t.rgb,t.a),1.);}`},
+  glsl:`vec4 node(vec2 uv){vec4 B=u_has0==1?texture(u_t0,uv):vec4(0.);if(u_hasimg==0)return B;vec4 t=texture(u_img,uv);if(u_has0==0)return t;
+   float a=t.a+B.a*(1.-t.a);return a<1e-5?vec4(0.):vec4((t.rgb*t.a+B.rgb*B.a*(1.-t.a))/a,a);}`},
 
  dropshadow:{name:'Sombra paralela',cat:'desenfoque',desc:'Sombra a partir de la transparencia de la capa (por ejemplo un texto o una imagen recortada)',inputs:[{k:'in',l:'Capa'},{k:'base',l:'Fondo'}],
   params:[C('c','Color','#000000'),R('op','Opacidad',0,1,.6,.01),R('dist','Distancia',0,300,14,1,'px'),R('ang','Ángulo',0,360,135,1,'°'),R('blur','Desenfoque',0,150,12,1,'px'),R('spread','Extensión',0,1,0,.01)],
@@ -1203,11 +1204,11 @@ const NT={
    vec4 G=vec4(p_c,g);vec4 S=vec4(min(B.rgb+p_c*g,1.),max(B.a,g));if(B.a<.001)S=G;
    return over(L,S);}`},
  reroute:{name:'Desvío',cat:'composicion',desc:'Punto para ordenar cables. También: doble clic sobre un cable',inputs:[{k:'in',l:''}],params:[],tiny:true,
-  glsl:`vec4 node(vec2 uv){return vec4(texture(u_t0,uv).rgb,1.);}`},
+  glsl:`vec4 node(vec2 uv){return texture(u_t0,uv);}`},
  _cmp:{name:'Antes/después',cat:'composicion',desc:'',inputs:[{k:'a',l:'A'},{k:'b',l:'B'}],params:[R('split','División',0,1,.5,.01)],noLib:true,
   glsl:`vec4 node(vec2 uv){return vec4(uv.x<p_split?texture(u_t0,uv).rgb:texture(u_t1,uv).rgb,1.);}`},
  output:{name:'Salida',cat:'basicos',desc:'Lo que se ve y se exporta',inputs:[{k:'in',l:'Entrada'}],params:[],noOut:true,noLib:true,
-  glsl:`vec4 node(vec2 uv){return vec4(texture(u_t0,uv).rgb,1.);}`}
+  glsl:`vec4 node(vec2 uv){return texture(u_t0,uv);}`}
 };
 FILTERS.forEach(f=>{NT[f.id]={name:f.name,cat:['posterize','threshold','chmixer','selective','recolor'].includes(f.id)?'basicos':f.cat,desc:f.desc,filter:f,inputs:[{k:'in',l:'Entrada'},{k:'mask',l:'Máscara',mask:1}],
   params:[R('_mix','Intensidad',0,1,1,.01)].concat(f.params)};});
@@ -1291,7 +1292,7 @@ function initGL(){
   const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
   copyProg=program(`#version 300 es
-precision highp float;uniform sampler2D u_tex;in vec2 v_uv;out vec4 o;void main(){o=vec4(texture(u_tex,v_uv).rgb,1.);}`);
+precision highp float;uniform sampler2D u_tex;in vec2 v_uv;out vec4 o;void main(){o=texture(u_tex,v_uv);}`);
   mixProg=program(`#version 300 es
 precision highp float;uniform sampler2D u_tex;uniform sampler2D u_in;uniform sampler2D u_mask;uniform int u_hasMask;uniform float u_mix;in vec2 v_uv;out vec4 o;
 void main(){float m=u_mix;if(u_hasMask==1)m*=dot(texture(u_mask,v_uv).rgb,vec3(.2126,.7152,.0722));o=vec4(mix(texture(u_in,v_uv).rgb,texture(u_tex,v_uv).rgb,m),1.);}`);
@@ -1440,6 +1441,7 @@ function textTex(n,W,H){const P=n.params,fam=gfFamily(P);ensureFont(fam);const d
       /* texto en curva: cada letra sobre un arco (positivo = arco hacia arriba) */
       const sg=cv>0?1:-1;sx=-w/2;for(const ch of t){const cw=x.measureText(ch).width,th=(sx+cw/2)/R;
         x.save();x.translate(Math.sin(th)*R,y+sg*(R-Math.cos(th)*R));x.rotate(sg*th);stroke?x.strokeText(ch,0,0):x.fillText(ch,0,0);x.restore();sx+=cw+trk;}};
+    {const sag=R?R*(1-Math.cos(Math.min(Math.PI,bw/(2*R)))):0,pad=+P.sw*k;n._tb={w:(bw+pad*2)/W,h:(bh+sag*2+pad*2)/H};}
     x.textAlign=R?'center':'left';
     if(+P.sw>0){x.strokeStyle=P.sc;x.lineWidth=+P.sw*2*k;lines.forEach((t,i)=>drawLine(t,i,true));}
     x.fillStyle=fill;lines.forEach((t,i)=>drawLine(t,i,false));
@@ -2568,7 +2570,12 @@ $('#libview').addEventListener('drop',e=>{e.preventDefault();$('#libview').class
 /* Editor de degradado sobre la vista previa */
 let geStop='b';
 function geNode(){const n=sel!=null&&byId(sel);return n&&n.type==='gradient'&&!paintUid?n:null;}
-function placeGradEdit(){const ge=$('#gedit');const n=geNode();ge.hidden=!n;if(!n)return;const P=n.params;const pr=pv.getBoundingClientRect(),cr=cv.getBoundingClientRect();
+function teNode(){const n=sel!=null&&byId(sel);return n&&n.type==='text'&&!paintUid&&n._tb&&!n.bypass?n:null;}
+function placeGradEdit(){const ge=$('#gedit');const n=geNode(),tn=n?null:teNode();ge.hidden=!n&&!tn;
+  ['geL','geM','geA','geB','geBar'].forEach(id=>$('#'+id).style.display=n?'':'none');$('#teBox').style.display=tn?'':'none';
+  if(tn){const pr=pv.getBoundingClientRect(),cr=cv.getBoundingClientRect(),P=tn.params,b=tn._tb,R=$('#teBox');
+    R.setAttribute('x',cr.left-pr.left+(+P.x-b.w/2)*cr.width-4);R.setAttribute('y',cr.top-pr.top+(+P.y-b.h/2)*cr.height-4);R.setAttribute('width',b.w*cr.width+8);R.setAttribute('height',b.h*cr.height+8);return;}
+  if(!n)return;const P=n.params;const pr=pv.getBoundingClientRect(),cr=cv.getBoundingClientRect();
   const X=u=>cr.left-pr.left+u*cr.width,Y=v=>cr.top-pr.top+(1-v)*cr.height;const ax=X(+P.x1),ay=Y(+P.y1),bx=X(+P.x2),by=Y(+P.y2),m=+P.mid;
   const L=$('#geL');L.setAttribute('x1',ax);L.setAttribute('y1',ay);L.setAttribute('x2',bx);L.setAttribute('y2',by);
   const A=$('#geA'),B=$('#geB');A.setAttribute('cx',ax);A.setAttribute('cy',ay);B.setAttribute('cx',bx);B.setAttribute('cy',by);A.classList.toggle('on',geStop==='a');B.classList.toggle('on',geStop==='b');
@@ -2581,6 +2588,10 @@ function geChanged(final){scheduleRender();scheduleThumbs();placeGradEdit();if(f
   el.onpointermove=ev=>{moved=true;const q=geUV(ev);if(id==='geA'){P.x1=+q.u.toFixed(4);P.y1=+q.v.toFixed(4);}else if(id==='geB'){P.x2=+q.u.toFixed(4);P.y2=+q.v.toFixed(4);}
     else{const cr=cv.getBoundingClientRect(),S=cr.width/cr.height;const ax=P.x1*S,ay=+P.y1,dx=(P.x2-P.x1)*S,dy=P.y2-P.y1,t=((q.u*S-ax)*dx+(q.v-ay)*dy)/Math.max(dx*dx+dy*dy,1e-6);P.mid=+Math.min(.95,Math.max(.05,t)).toFixed(3);}geChanged(false);};
   el.onpointerup=()=>{el.onpointermove=null;if(moved)geChanged(true);};});});
+$('#teBox').addEventListener('pointerdown',e=>{const n=teNode();if(!n||e.button!==0||spaceDown)return;e.stopPropagation();e.preventDefault();const el=e.currentTarget;el.setPointerCapture(e.pointerId);
+  const cr=cv.getBoundingClientRect(),P=n.params,sx=e.clientX,sy=e.clientY,x0=+P.x,y0=+P.y;let moved=false;
+  el.onpointermove=ev=>{moved=true;P.x=+Math.min(1,Math.max(0,x0+(ev.clientX-sx)/cr.width)).toFixed(4);P.y=+Math.min(1,Math.max(0,y0+(ev.clientY-sy)/cr.height)).toFixed(4);geChanged(false);};
+  el.onpointerup=()=>{el.onpointermove=null;if(moved)geChanged(true);};});
 ['geA','geB'].forEach(id=>$('#'+id).addEventListener('dblclick',e=>{e.stopPropagation();geStop=id==='geA'?'a':'b';const n=geNode();if(!n)return;const c=$('#geCol');c.value=geStop==='a'?n.params.c1:n.params.c2;c.click();}));
 ['pointerdown','dblclick','wheel'].forEach(ev=>$('#geBar').addEventListener(ev,e=>e.stopPropagation()));
 $('#geSw').onclick=()=>{const n=geNode();if(!n)return;const c=$('#geCol');c.value=geStop==='a'?n.params.c1:n.params.c2;c.click();};
