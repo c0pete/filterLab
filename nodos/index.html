@@ -1039,9 +1039,9 @@ const NT={
    else if(p_type<1.5)t=length(p-A)/L;
    else{vec2 r=rot(p-A,-atan(d.y,d.x)+.785398);t=(abs(r.x)+abs(r.y))/(L*1.41421);}
    t=clamp(t,0.,1.);t=t<p_mid?t/p_mid*.5:.5+(t-p_mid)/(1.-p_mid)*.5;return vec4(mix(p_c1,p_c2,t),mix(p_a1,p_a2,t));}`},
- blend:{name:'Mezclar',cat:'basicos',desc:'Funde un frente sobre un fondo, con modo, opacidad y máscara. Para mover o escalar el frente, poné un Transformar antes',inputs:[{k:'a',l:'Fondo'},{k:'b',l:'Frente'},{k:'mask',l:'Máscara',mask:1}],
+ blend:{name:'Mezclar',cat:'basicos',desc:'Funde un frente sobre un fondo, con modo, opacidad y máscara (blanco muestra el frente). Sin frente, la máscara recorta el fondo: blanco queda, negro se vuelve transparente. Para mover o escalar el frente, poné un Transformar antes',inputs:[{k:'a',l:'Fondo'},{k:'b',l:'Frente'},{k:'mask',l:'Máscara',mask:1}],
   params:[S('mode','Fusión',BLEND_NAMES,0),R('opacity','Opacidad',0,1,1,.01)],
-  glsl:`vec4 node(vec2 uv){vec4 A=texture(u_t0,uv);vec3 a=u_has0==1?A.rgb:vec3(0.);float aa=u_has0==1?A.a:0.;if(u_has1==0)return vec4(a,u_has0==1?aa:1.);
+  glsl:`vec4 node(vec2 uv){vec4 A=texture(u_t0,uv);vec3 a=u_has0==1?A.rgb:vec3(0.);float aa=u_has0==1?A.a:0.;if(u_has1==0){float k=u_has2==1?luma(texture(u_t2,uv).rgb):1.;return vec4(a,(u_has0==1?aa:1.)*mix(1.,k,p_opacity));}
    vec4 B=texture(u_t1,uv);
    float m=p_opacity*B.a;if(u_has2==1)m*=luma(texture(u_t2,uv).rgb);return vec4(mix(a,blendMode(a,B.rgb,int(p_mode+.5)),m),max(aa,m));}`},
  lumamask:{name:'Máscara de luminancia',cat:'basicos',desc:'Convierte tonos en una máscara blanco y negro',inputs:[{k:'in',l:'Entrada'}],
