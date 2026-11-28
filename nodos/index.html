@@ -514,7 +514,7 @@ const PALETTES=[
 ];
 
 /* ---------------- DISTORSIONAR (ayudantes) ---------------- */
-const DEDGE=`vec3 sampE(vec2 q){int m=int(p_edge+.5);if(m==1)q=fract(q);else if(m==2)q=1.-abs(1.-mod(q,2.));else if(m==3&&(q.x<0.||q.x>1.||q.y<0.||q.y>1.))return vec3(0.);return textureLod(u_tex,clamp(q,0.,1.),0.).rgb;}
+const DEDGE=`vec3 sampE(vec2 q){q=WQ(q);int m=int(p_edge+.5);if(m==1)q=fract(q);else if(m==2)q=1.-abs(1.-mod(q,2.));else if(m==3&&(q.x<0.||q.x>1.||q.y<0.||q.y>1.))return vec3(0.);return textureLod(u_tex,clamp(q,0.,1.),0.).rgb;}
 vec2 ASP(){return vec2(u_res.x/u_res.y,1.);}`;
 const CEN=()=>[R('cx','Centro X',0,1,.5,.01),R('cy','Centro Y',0,1,.5,.01)];
 const EDGE=(d=0)=>S('edge','Bordes',['Extender','Repetir','Espejar','Transparente'],d);
@@ -836,7 +836,7 @@ const FILTERS=[
  vec2 st=dir*p_len*u_scale/u_res;vec3 acc=vec3(0.);float w=0.;
  for(int i=0;i<24;i++){float t=float(i)/23.;float k=1.-.75*t;vec2 q=uv-st*t;
   if(p_flow>0.){vec2 P2=q*u_res/u_scale/max(p_scale,1.)+p_seed*vec2(17.31,9.73);float a2=(fbm(P2)-.5)*12.566;vec2 d2=normalize(mix(vec2(cos(a0),sin(a0)),vec2(cos(a2),sin(a2)),p_flow)+1e-4);q=uv-mix(st*t,d2*p_len*t*u_scale/u_res,.5);}
-  acc+=Tc(clamp(q,0.,1.))*k;w+=k;}
+  acc+=Tc(clamp(WQ(q),0.,1.))*k;w+=k;}
  return vec4(acc/w,1.);}`},
 {id:'ripple',cat:'distorsion',name:'Ondas',desc:'Anillos como una gota sobre el agua',
  params:[R('amp','Amplitud',0,100,8,.5,'px'),R('wave','Separación',4,400,40,1,'px'),R('phase','Fase',0,360,0,1,'°'),R('decay','Atenuación',0,1,.3,.01),...CEN(),EDGE()],
@@ -869,13 +869,13 @@ const FILTERS=[
  params:[S('axis','Eje',['Izquierda sobre derecha','Derecha sobre izquierda','Arriba sobre abajo','Abajo sobre arriba','Cuatro cuadrantes']),...CEN()],
  glsl:`vec4 fx(vec2 uv){vec2 q=uv;int m=int(p_axis+.5);
  if((m==0||m==4)&&q.x>p_cx)q.x=2.*p_cx-q.x;if(m==1&&q.x<p_cx)q.x=2.*p_cx-q.x;
- if((m==2||m==4)&&q.y<p_cy)q.y=2.*p_cy-q.y;if(m==3&&q.y>p_cy)q.y=2.*p_cy-q.y;return vec4(Tc(clamp(q,0.,1.)),1.);}`},
+ if((m==2||m==4)&&q.y<p_cy)q.y=2.*p_cy-q.y;if(m==3&&q.y>p_cy)q.y=2.*p_cy-q.y;return vec4(Tc(clamp(WQ(q),0.,1.)),1.);}`},
 {id:'tile',cat:'distorsion',name:'Mosaico repetido',desc:'Repite la imagen en una grilla',
  params:[R('cols','Columnas',1,16,3,1),R('rows','Filas',1,16,3,1),R('gap','Separación',0,40,0,.5,'px'),R('stagger','Desfase de filas',0,1,0,.01),B('flip','Alternar espejado'),C('bg','Fondo','#111111')],
  glsl:`vec4 fx(vec2 uv){vec2 n=vec2(p_cols,p_rows);vec2 g=uv*n;g.x+=floor(g.y)*p_stagger;vec2 id=floor(g),f=fract(g);
  if(p_flip>.5){if(mod(id.x,2.)>.5)f.x=1.-f.x;if(mod(id.y,2.)>.5)f.y=1.-f.y;}
  vec2 gp=p_gap*u_scale*n/u_res;if(any(lessThan(f,gp*.5))||any(greaterThan(f,1.-gp*.5)))return vec4(p_bg,1.);
- f=(f-gp*.5)/max(1.-gp,1e-3);return vec4(Tc(f),1.);}`},
+ f=(f-gp*.5)/max(1.-gp,1e-3);return vec4(Tc(WQ(f)),1.);}`},
 /* ---------------- BÁSICOS DE COLOR (solo modo nodos) ---------------- */
 {id:'chmixer',cat:'general',name:'Mezclador de canales',desc:'Arma cada canal de salida con porcentajes de rojo, verde y azul',
  params:[S('out','Canal de salida',['Rojo','Verde','Azul','Gris (monocromo)']),B('mono','Monocromo'),
@@ -1254,6 +1254,8 @@ in vec2 v_uv;out vec4 o;
 #define PI 3.14159265
 float ss(float a,float b,float x){float t=clamp((x-a)/(b-a),0.,1.);return t*t*(3.-2.*t);}
 float luma(vec3 c){return dot(c,vec3(.2126,.7152,.0722));}
+/* Deformaciones: Intensidad y Máscara escalan cuánto se mueve cada píxel, en vez de fundir con el original */
+vec2 WQ(vec2 q){float m=u_mix;if(u_hasMask==1)m*=luma(texture(u_mask,v_uv).rgb);return mix(v_uv,q,m);}
 float hash(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031+fract(u_seed*.61803)*7.13);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
 float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+1.),f.x),f.y);}
 float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*vnoise(p);p=p*2.03+17.1;a*=.5;}return s;}
@@ -1282,7 +1284,12 @@ float oa=c.a;
 #else
 float oa=ia;
 #endif
-if(u_last==1){float m=u_mix;if(u_hasMask==1)m*=luma(texture(u_mask,v_uv).rgb);c.rgb=mix(texture(u_in,v_uv).rgb,c.rgb,m);oa=mix(ia,oa,m);}o=vec4(clamp(c.rgb,0.,1.),clamp(oa,0.,1.));}`;
+#ifdef WARP_MIX
+if(false){
+#else
+if(u_last==1){
+#endif
+float m=u_mix;if(u_hasMask==1)m*=luma(texture(u_mask,v_uv).rgb);c.rgb=mix(texture(u_in,v_uv).rgb,c.rgb,m);oa=mix(ia,oa,m);}o=vec4(clamp(c.rgb,0.,1.),clamp(oa,0.,1.));}`;
 const NMAIN=`
 void main(){o=clamp(node(v_uv),0.,1.);}`;
 function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
@@ -1296,7 +1303,7 @@ function program(fs){const p=gl.createProgram();gl.attachShader(p,vsObj);gl.atta
   const cache=new Map();const U=n=>{if(!cache.has(n))cache.set(n,gl.getUniformLocation(p,n));return cache.get(n);};
   gl.useProgram(p);UNITS.forEach(([n,u])=>{const l=U(n);if(l)gl.uniform1i(l,u);});return{p,U};}
 const decl=ps=>ps.filter(p=>p.k[0]!=='_'&&p.t!=='x').map(p=>p.t==='c'?`uniform vec3 p_${p.k};`:`uniform float p_${p.k};`).join('\n');
-function filterProg(f){if(!f._prog)f._prog=program(HEAD.replace('\n','\n'+(f.ownAlpha?'#define OWN_A\n':''))+decl(f.params)+'\n'+(f.uniforms||'')+'\n'+f.glsl+FMAIN);return f._prog;}
+function filterProg(f){if(!f._prog)f._prog=program(HEAD.replace('\n','\n'+(f.ownAlpha?'#define OWN_A\n':'')+(/\b(sampE|WQ)\(/.test(f.glsl)?'#define WARP_MIX\n':''))+decl(f.params)+'\n'+(f.uniforms||'')+'\n'+f.glsl+FMAIN);return f._prog;}
 let placeProg=null;
 /* Copia una textura centrada a escala 1:1 en otra de distinto tamaño (lo que sobra queda transparente) */
 function placeInto(src,dst){if(!placeProg)placeProg=program(`#version 300 es
