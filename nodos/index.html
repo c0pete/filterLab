@@ -254,7 +254,8 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
 .app.dragcol .prm.pc{outline:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px;border-radius:5px}.prm.pc.hotrow{outline:2px solid var(--accent)!important}.swl{display:grid;gap:6px}.swr{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:6px;align-items:center;position:relative}
 .swr input[type=color]{width:40px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);padding:1px;cursor:pointer}
 .swr input.hx{width:100%;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:3px 6px;font:12px var(--f-mono);color:inherit;text-transform:uppercase}
-.swr .ib{width:24px;height:24px}.swadd{justify-self:start}
+.swr .ib{width:28px;height:26px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}.swr .ib:hover{border-color:var(--accent)}.swr input.hx{height:26px}.swr input[type=color]{height:26px!important}.swadd{border-radius:6px}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}input[type=color]::-webkit-color-swatch{border:none;border-radius:4px}input[type=color]::-moz-color-swatch{border:none;border-radius:4px}.swadd{justify-self:start}
 .pin.on .dot{background:var(--wire)}
 .pin.mask .dot{border-radius:3px}
 /* Colores: rombo sólido (no se confunde con fondos ni cables punteados) */
@@ -1393,7 +1394,10 @@ function connect(from,to,port,slot){if(from===to)return false;const fn=byId(from
   const isP=typeof port==='string'&&port.startsWith('p:'),sw=fn.type==='eyedrop';
   if(isP!==sw){toast(sw?'El Cuentagotas se conecta a un parámetro de color (el punto a la izquierda de cada color)':'A un color solo se le conecta un Cuentagotas');return false;}
   if(reaches(to,from)){toast('Esa conexión formaría un ciclo');return false;}
-  G.edges=G.edges.filter(e=>!(e.to===to&&e.port===port));G.edges.push(sw?{from,to,port,slot:+slot||0}:{from,to,port});if(sw)syncLinks();return true;}
+  const old=G.edges.find(e=>e.to===to&&e.port===port);G.edges=G.edges.filter(e=>e!==old);
+  if(sw){const t=byId(to),k=port.slice(2);G.edges.push({from,to,port,slot:+slot||0,prev:old&&old.prev!=null?old.prev:(t?t.params[k]:undefined)});syncLinks();}else G.edges.push({from,to,port});return true;}
+/* Al quitar un enlace de color, el parámetro vuelve al color que tenía antes de enlazarlo */
+function unlinkRestore(list){(list||[]).forEach(e=>{if(e&&e.slot!=null&&e.prev){const t=byId(e.to);if(t)t.params[e.port.slice(2)]=e.prev;}});}
 /* Colores enlazados: cada cable desde un Cuentagotas copia su color al parámetro */
 function syncLinks(){G.edges.forEach(e=>{if(typeof e.port!=='string'||!e.port.startsWith('p:'))return;const s=byId(e.from),t=byId(e.to);if(!s||!t)return;const c=s.params['c'+(e.slot|0)];const k=e.port.slice(2);if(!c||t.params[k]===c)return;t.params[k]=c;
   const inp=typeof world!=='undefined'&&world.querySelector(`.node[data-uid="${t.uid}"] .prm[data-port="${e.port}"] input[type=color]`);if(inp)inp.value=c;});}
@@ -1993,7 +1997,7 @@ function deleteNode(uid,batch){const n=byId(uid);if(!n||n.type==='output')return
   // Reconecta el paso principal: lo que entraba por la primera entrada pasa a quien salía de este nodo
   const T=NT[n.type];const inE=T.inputs.length?edgeInto(uid,T.inputs[0].k):null;
   const outs=G.edges.filter(e=>e.from===uid);
-  G.edges=G.edges.filter(e=>e.from!==uid&&e.to!==uid);
+  unlinkRestore(G.edges.filter(e=>e.from===uid));G.edges=G.edges.filter(e=>e.from!==uid&&e.to!==uid);
   if(inE)outs.forEach(e=>{if(NT[byId(e.to).type].inputs[0].k===e.port)G.edges.push({from:inE.from,to:e.to,port:e.port});});
   G.nodes=G.nodes.filter(x=>x!==n);if(previewUid===uid)previewUid=null;if(sel===uid)sel=null;selSet.delete(uid);
   if(batch)return;pushHistory();buildGraphDOM();scheduleRender();}
@@ -2050,7 +2054,7 @@ function swatchCtl(n){const P=n.params;const w=el('div','swl');const N=Math.max(
       startPick(n.uid,k);};
     const del=el('button','ib');del.innerHTML=ICON.del;del.title='Quitar este color';del.setAttribute('aria-label','Quitar color');del.hidden=N<=1;
     del.onclick=e=>{e.stopPropagation();for(let j=i;j<9;j++)P['c'+j]=P['c'+(j+1)];P.count=N-1;
-      G.edges=G.edges.filter(x=>!(x.from===n.uid&&(x.slot|0)===i));G.edges.forEach(x=>{if(x.from===n.uid&&(x.slot|0)>i)x.slot--;});syncLinks();pushHistory();buildGraphDOM();scheduleRender();};
+      unlinkRestore(G.edges.filter(x=>x.from===n.uid&&(x.slot|0)===i));G.edges=G.edges.filter(x=>!(x.from===n.uid&&(x.slot|0)===i));G.edges.forEach(x=>{if(x.from===n.uid&&(x.slot|0)>i)x.slot--;});syncLinks();pushHistory();buildGraphDOM();scheduleRender();};
     const dot=el('span','dot');dot.dataset.uid=n.uid;dot.dataset.dir='out';dot.dataset.slot=i;dot.title='Arrastrá hasta el punto de un color en otro nodo';dot.style.background=P[k];
     r.append(c,hx,pk,del,dot);w.appendChild(r);}
   if(N<10){const add=el('button','btn small swadd','+ Color');add.onclick=e=>{e.stopPropagation();P.count=N+1;pushHistory();buildGraphDOM();scheduleRender();};w.appendChild(add);}
@@ -2211,7 +2215,7 @@ graphEl.addEventListener('pointerdown',e=>{{const ae=document.activeElement;if(a
   if(dot){e.preventDefault();e.stopPropagation();const uid=+dot.dataset.uid;
     if(dot.dataset.dir==='out'){drag={kind:'wire',from:uid,slot:dot.dataset.slot};}
     else{const ex=edgeInto(uid,dot.dataset.port);
-      if(ex){G.edges=G.edges.filter(x=>x!==ex);drag={kind:'wire',from:ex.from,slot:ex.slot,detached:true};scheduleRender();}
+      if(ex){G.edges=G.edges.filter(x=>x!==ex);unlinkRestore([ex]);drag={kind:'wire',from:ex.from,slot:ex.slot,detached:true};scheduleRender();}
       else drag={kind:'wire',to:uid,port:dot.dataset.port};}
     graphEl.setPointerCapture(e.pointerId);updateTemp(e);return;}
   if(e.target.closest('.whit')){const i=+e.target.closest('.whit').dataset.i;const now=performance.now();if(lastWire.i===i&&now-lastWire.t<450&&!(G.edges[i]&&G.edges[i].slot!=null)){lastWire={i:-1,t:0};insertReroute(i,toWorld(e.clientX,e.clientY));return;}lastWire={i,t:now};selEdge=i;sel=null;selSet.clear();markSelection();drawWires();return;}
@@ -2394,7 +2398,7 @@ window.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();e.shiftKey?redo():undo();return;}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'&&!typing){e.preventDefault();redo();return;}
   if(typing)return;
-  if(e.key==='Delete'||e.key==='Backspace'){if(selEdge>=0){G.edges.splice(selEdge,1);selEdge=-1;pushHistory();buildGraphDOM();scheduleRender();}else if(selSet.size)deleteNodes([...selSet]);e.preventDefault();}
+  if(e.key==='Delete'||e.key==='Backspace'){if(selEdge>=0){unlinkRestore(G.edges.splice(selEdge,1));selEdge=-1;pushHistory();buildGraphDOM();scheduleRender();}else if(selSet.size)deleteNodes([...selSet]);e.preventDefault();}
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'&&sel){e.preventDefault();const ns=[...selSet].map(byId).filter(n=>n&&n.type!=='output');const fresh=new Set();ns.forEach(n=>{const c=addNode(n.type,n.x+30,n.y+30,JSON.parse(JSON.stringify(n.params)));c.collapsed=n.collapsed;if(n.bypass)c.bypass=true;if(n.pv)c.pv=n.pv;if(images.has(n.uid))images.set(c.uid,images.get(n.uid));fresh.add(c.uid);});if(fresh.size){selSet=fresh;sel=[...fresh].pop();pushHistory();buildGraphDOM();scheduleRender();}}
   else if(e.key==='?'){e.preventDefault();toggleKeys();}
   else if(e.key==='f'||e.key==='F')frameAll();
@@ -2510,7 +2514,7 @@ function loadGraph(g,opts){g=migrateGraph(g);
     if(n.type==='paint'){if(src.pv&&paintData.has(src.pv))n.pv=src.pv;else if(src.paintPNG)loadPaintPNG(n,src.paintPNG);}});
   (g.edges||[]).forEach(e=>{const f=map.get(e.from),t=map.get(e.to);if(!f||!t)return;const TT=NT[byId(t).type];
     if(TT.inputs.some(i=>i.k===e.port))G.edges.push({from:f,to:t,port:e.port});
-    else if(e.slot!=null&&byId(f).type==='eyedrop'&&TT.params.some(p=>'p:'+p.k===e.port))G.edges.push({from:f,to:t,port:e.port,slot:+e.slot});});
+    else if(e.slot!=null&&byId(f).type==='eyedrop'&&TT.params.some(p=>'p:'+p.k===e.port))G.edges.push(Object.assign({from:f,to:t,port:e.port,slot:+e.slot},e.prev?{prev:e.prev}:{}));});
   G.frames=JSON.parse(JSON.stringify(g.frames||[]));
   if(!outputNode()){addNode('output',200,60);}
   if(typeof g.seed==='number'){state.seed=g.seed;$('#seed').value=g.seed;}
