@@ -246,17 +246,22 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
 .dot::after{content:"";position:absolute;inset:-9px;border-radius:50%}
 .pin .dot{left:-8.5px}
 .pout .dot{right:-8.5px;border-color:var(--accent);background:var(--accent)}
-.prm.pc{position:relative}.prm.pc>.dot{left:-17px;width:11px;height:11px;border-width:1.5px;border-style:dashed;opacity:.55}.prm.pc>.dot:hover,.prm.pc>.dot.hot,.prm.pc.lk>.dot{opacity:1;border-style:solid}
+.prm.pc{position:relative}
 .prm.pc.lk input[type=color]{opacity:.55;cursor:not-allowed}.prm.pc.lk label::after{content:" · enlazado";color:var(--muted);font-size:11px}
 .pv.picking,.pv.picking canvas{cursor:crosshair}
 #loupe{position:fixed;z-index:9999;pointer-events:none;width:120px;padding:10px;background:#1b1a18;border:1px solid #3a3934;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:grid;gap:8px;justify-items:center}
 #loupe canvas{width:99px;height:99px;border-radius:6px;image-rendering:pixelated}#loupe i{display:block;width:99px;height:54px;border-radius:6px;border:1px solid rgba(255,255,255,.25)}#loupe b{font:600 13px var(--f-mono);color:#ece8de}
-.app.dragcol .prm.pc>.dot{opacity:1;border-style:solid;border-color:var(--accent);transform:scale(1.25)}.app.dragcol .prm.pc{outline:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px;border-radius:5px}.prm.pc.hotrow{outline:2px solid var(--accent)!important}.swl{display:grid;gap:6px}.swr{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:6px;align-items:center;position:relative}
+.app.dragcol .prm.pc{outline:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px;border-radius:5px}.prm.pc.hotrow{outline:2px solid var(--accent)!important}.swl{display:grid;gap:6px}.swr{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:6px;align-items:center;position:relative}
 .swr input[type=color]{width:40px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);padding:1px;cursor:pointer}
 .swr input.hx{width:100%;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:3px 6px;font:12px var(--f-mono);color:inherit;text-transform:uppercase}
-.swr .ib{width:24px;height:24px}.swr>.dot{right:-18.5px;border-color:var(--accent)}.swadd{justify-self:start}
+.swr .ib{width:24px;height:24px}.swadd{justify-self:start}
 .pin.on .dot{background:var(--wire)}
-.pin.mask .dot{border-style:dashed}
+.pin.mask .dot{border-radius:3px}
+/* Colores: rombo sólido (no se confunde con fondos ni cables punteados) */
+.prm.pc>.dot,.swr>.dot{border-radius:2px;transform:rotate(45deg)}.prm.pc>.dot{width:10px;height:10px;left:-15.5px;border:2px solid #cfcabe;background:var(--panel);opacity:1}
+.prm.pc>.dot:hover,.prm.pc>.dot.hot,.swr>.dot:hover,.swr>.dot.hot,.app.dragcol .prm.pc>.dot{transform:rotate(45deg) scale(1.35);border-color:var(--accent)}
+.prm.pc.lk>.dot{background:#cfcabe}.swr>.dot{width:13px;height:13px;right:-17px;border-color:#ece8de}
+#loupe[hidden]{display:none}
 .dot:hover,.dot.hot{transform:scale(1.35);border-color:var(--accent)}
 .thumb{display:block;width:calc(100% - 16px);margin:2px 8px 6px;border-radius:3px;background:#000;image-rendering:auto}
 .nb{padding:2px 10px 10px;display:grid;grid-template-columns:minmax(0,1fr);gap:7px;border-top:1px solid var(--line)}
