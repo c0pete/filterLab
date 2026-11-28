@@ -591,21 +591,21 @@ const FILTERS=[
   float w=1.-l;float aa=1.2/(sp*u_scale);float m=ss(w+aa,w-aa,f)*ss(0.,.05,w);
   if(p_cross>.5){vec2 q2=rot(P,radians(p_angle+90.));float f2=abs(fract(q2.y/sp)-.5)*2.;float w2=clamp((.45-l)*2.2,0.,1.);m=max(m,ss(w2+aa,w2-aa,f2)*ss(0.,.05,w2));}
   return vec4(mix(p_paper,p_ink,m),1.);}`},
-{id:'border',cat:'composicion',name:'Borde',desc:'Marco plano o con degradado, adentro o afuera de la imagen',
+{id:'border',cat:'composicion',name:'Borde',ownAlpha:true,desc:'Marco plano o con degradado, adentro o afuera de la imagen',
  params:[S('place','Ubicación',['Adentro (cubre la imagen)','Afuera (achica la imagen)']),R('w','Grosor',0,400,32,1,'px'),R('radius','Esquinas redondeadas',0,400,0,1,'px'),
   S('type','Relleno',['Plano','Degradado lineal','Degradado hacia adentro']),C('c1','Color A','#f4efe4'),C('c2','Color B','#e2508f'),R('angle','Ángulo',0,360,90,1,'°'),
   R('line','Filete interior',0,20,0,.5,'px'),C('lc','Color del filete','#151513')],
  glsl:`float sdb(vec2 p,vec2 b,float r){r=min(r,min(b.x,b.y));vec2 q=abs(p)-b+r;return length(max(q,0.))+min(max(q.x,q.y),0.)-r;}
  vec4 fx(vec2 uv){vec2 P=uv*u_res;float w=p_w*u_scale;vec2 hb=max(u_res*.5-w,vec2(1.));float d=sdb(P-u_res*.5,hb,p_radius*u_scale);
-  vec3 img=p_place<.5?Tc(uv):Tc(clamp((P-w)/max(u_res-2.*w,vec2(1.)),0.,1.));
+  vec4 I4=p_place<.5?T(uv):T(clamp((P-w)/max(u_res-2.*w,vec2(1.)),0.,1.));vec3 img=I4.rgb;float ia=I4.a;
   int t=int(p_type+.5);float g;
   if(t==1){float a=radians(p_angle);vec2 dir=vec2(cos(a),sin(a));vec2 c=(uv-.5)*vec2(u_res.x/u_res.y,1.);float ext=abs(dir.x)*u_res.x/u_res.y*.5+abs(dir.y)*.5;g=dot(c,dir)/ext*.5+.5;}
   else if(t==2)g=clamp(d/max(w,1.),0.,1.);else g=0.;
   vec3 bc=mix(p_c1,p_c2,clamp(g,0.,1.));
   float lw=p_line*u_scale;vec3 col=img;
-  if(lw>0.)col=mix(col,p_lc,ss(-.75,.75,d+lw)*ss(.75,-.75,d)*step(.01,w));
-  col=mix(col,bc,ss(-.75,.75,d)*step(.01,w));
-  return vec4(col,1.);}`},
+  float kl=lw>0.?ss(-.75,.75,d+lw)*ss(.75,-.75,d)*step(.01,w):0.,kb=ss(-.75,.75,d)*step(.01,w);
+  col=mix(col,p_lc,kl);col=mix(col,bc,kb);
+  return vec4(col,mix(ia,1.,max(kl,kb)));}`},
 /* ---------------- PANTALLA ---------------- */
 {id:'scanlines',cat:'pantalla',name:'Scanlines',desc:'Líneas horizontales de barrido',
  params:[R('spacing','Separación',1,20,4,.5,'px'),R('int','Intensidad',0,1,.5,.01),R('sharp','Dureza',.2,6,1.5,.1),R('boost','Compensar brillo',0,1,.5,.01),B('rgb','Máscara RGB')],
@@ -1047,26 +1047,26 @@ const NT={
    float m=p_opacity*B.a;if(u_has2==1)m*=luma(texture(u_t2,uv).rgb);return vec4(mix(a,blendMode(a,B.rgb,int(p_mode+.5)),m),max(aa,m));}`},
  lumamask:{name:'Máscara de luminancia',cat:'basicos',desc:'Convierte tonos en una máscara blanco y negro',inputs:[{k:'in',l:'Entrada'}],
   params:[R('low','Negro hasta',0,1,.25,.01),R('high','Blanco desde',0,1,.75,.01),B('inv','Invertir')],
-  glsl:`vec4 node(vec2 uv){float l=luma(texture(u_t0,uv).rgb);float lo=min(p_low,p_high-.002);l=ss(lo,max(p_high,lo+.002),l);if(p_inv>.5)l=1.-l;return vec4(vec3(l),1.);}`},
+  glsl:`vec4 node(vec2 uv){float l=luma(texture(u_t0,uv).rgb);float lo=min(p_low,p_high-.002);l=ss(lo,max(p_high,lo+.002),l);if(p_inv>.5)l=1.-l;l*=texture(u_t0,uv).a;return vec4(vec3(l),1.);}`},
  channel:{name:'Separar canal',cat:'basicos',desc:'Un canal como imagen en grises',inputs:[{k:'in',l:'Entrada'}],
-  params:[S('ch','Canal',['Rojo','Verde','Azul','Luminancia','Saturación'],3)],
-  glsl:`vec4 node(vec2 uv){vec3 c=texture(u_t0,uv).rgb;int k=int(p_ch+.5);float v=k==0?c.r:k==1?c.g:k==2?c.b:k==3?luma(c):(max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b)));return vec4(vec3(v),1.);}`},
+  params:[S('ch','Canal',['Rojo','Verde','Azul','Luminancia','Saturación','Alfa (transparencia)'],3)],
+  glsl:`vec4 node(vec2 uv){vec3 c=texture(u_t0,uv).rgb;int k=int(p_ch+.5);float v=k==5?texture(u_t0,uv).a:k==0?c.r:k==1?c.g:k==2?c.b:k==3?luma(c):(max(c.r,max(c.g,c.b))-min(c.r,min(c.g,c.b)));return vec4(vec3(v),1.);}`},
  merge:{name:'Unir canales',cat:'basicos',desc:'Arma RGB con tres imágenes en grises',inputs:[{k:'r',l:'Rojo'},{k:'g',l:'Verde'},{k:'b',l:'Azul'}],params:[],
   glsl:`vec4 node(vec2 uv){return vec4(u_has0==1?luma(texture(u_t0,uv).rgb):0.,u_has1==1?luma(texture(u_t1,uv).rgb):0.,u_has2==1?luma(texture(u_t2,uv).rgb):0.,1.);}`},
  invert:{name:'Invertir',cat:'basicos',desc:'Negativo de la entrada',inputs:[{k:'in',l:'Entrada'}],params:[],
-  glsl:`vec4 node(vec2 uv){return vec4(1.-texture(u_t0,uv).rgb,1.);}`},
+  glsl:`vec4 node(vec2 uv){vec4 c=texture(u_t0,uv);return vec4(1.-c.rgb,c.a);}`},
  levels:{name:'Niveles',cat:'basicos',desc:'Punto negro, blanco y gamma sobre el histograma',inputs:[{k:'in',l:'Entrada'}],levelsUI:true,
   params:[R('black','Negro de entrada',0,1,0,.001),R('white','Blanco de entrada',0,1,1,.001),R('gamma','Gamma',.1,9.99,1,.01),R('oblack','Negro de salida',0,1,0,.001),R('owhite','Blanco de salida',0,1,1,.001)].map(p=>Object.assign(p,{hid:1})),
-  glsl:`vec4 node(vec2 uv){vec3 c=texture(u_t0,uv).rgb;c=clamp((c-p_black)/max(p_white-p_black,.002),0.,1.);c=pow(c,vec3(1./p_gamma));return vec4(mix(vec3(p_oblack),vec3(p_owhite),c),1.);}`},
+  glsl:`vec4 node(vec2 uv){vec3 c=texture(u_t0,uv).rgb;c=clamp((c-p_black)/max(p_white-p_black,.002),0.,1.);c=pow(c,vec3(1./p_gamma));return vec4(mix(vec3(p_oblack),vec3(p_owhite),c),texture(u_t0,uv).a);}`},
  hsl:{name:'Tono y saturación',cat:'basicos',desc:'Gira el tono, satura o aclara',inputs:[{k:'in',l:'Entrada'}],
   params:[R('hue','Tono',-180,180,0,1,'°'),R('sat','Saturación',0,2,1,.01),R('light','Luminosidad',-1,1,0,.01)],
   glsl:`vec3 rgb2hsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);return vec3(abs(q.z+(q.w-q.y)/(6.*d+1e-10)),d/(q.x+1e-10),q.x);}
   vec3 hsv2rgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(1.,2./3.,1./3.))*6.-3.);return c.z*mix(vec3(1.),clamp(p-1.,0.,1.),c.y);}
   vec4 node(vec2 uv){vec3 h=rgb2hsv(texture(u_t0,uv).rgb);h.x=fract(h.x+p_hue/360.);h.y=clamp(h.y*p_sat,0.,1.);vec3 c=hsv2rgb(h);
-   c=p_light>0.?mix(c,vec3(1.),p_light):c*(1.+p_light);return vec4(c,1.);}`},
+   c=p_light>0.?mix(c,vec3(1.),p_light):c*(1.+p_light);return vec4(c,texture(u_t0,uv).a);}`},
  edges:{name:'Detectar bordes',cat:'basicos',desc:'Detecta contornos (Sobel)',inputs:[{k:'in',l:'Entrada'}],
   params:[R('width','Grosor',.5,6,1,.1,'px'),R('gain','Fuerza',.5,8,2.5,.1),B('inv','Líneas oscuras sobre blanco',1),B('color','Conservar color')],
-  glsl:`float L(vec2 uv){return luma(texture(u_t0,uv).rgb);}
+  glsl:`float L(vec2 uv){vec4 c=texture(u_t0,uv);return luma(c.rgb)*c.a;}
   vec4 node(vec2 uv){vec2 d=max(p_width*u_scale,.7)/u_res;
    float gx=-L(uv+vec2(-d.x,d.y))-2.*L(uv+vec2(-d.x,0.))-L(uv-d)+L(uv+d)+2.*L(uv+vec2(d.x,0.))+L(uv+vec2(d.x,-d.y));
    float gy=-L(uv-d)-2.*L(uv+vec2(0.,-d.y))-L(uv+vec2(d.x,-d.y))+L(uv+vec2(-d.x,d.y))+2.*L(uv+vec2(0.,d.y))+L(uv+d);
@@ -1179,7 +1179,7 @@ const NT={
   glsl:`uniform float u_ov;
   vec4 node(vec2 uv){vec3 base=u_has0==1?texture(u_t0,uv).rgb:p_bg;vec4 pt=u_hasimg==1?texture(u_img,uv):vec4(0.);float a=pt.a;int m=int(p_mode+.5);
   if(m==1){float v=p_inv>.5?1.-a:a;if(u_ov>.5)return vec4(mix(base*.8+.1,vec3(1.,.22,.3),v*.65),1.);return vec4(vec3(v),1.);}
-  if(m==2)base=p_bg;return vec4(mix(base,pt.rgb,a),1.);}`},
+  float ba=u_has0==1?texture(u_t0,uv).a:1.;if(m==2){base=p_bg;ba=1.;}return vec4(mix(base,pt.rgb,a),mix(ba,1.,a));}`},
  opacity:{name:'Opacidad',cat:'composicion',desc:'Baja la opacidad de lo que entra (queda transparente). Para verlo sobre otra imagen usá Mezclar',inputs:[{k:'in',l:'Entrada'},{k:'mask',l:'Máscara',mask:1}],
   params:[R('op','Opacidad',0,1,.5,.01)],
   glsl:`vec4 node(vec2 uv){if(u_has0==0)return vec4(0.);vec4 c=texture(u_t0,uv);float o=p_op;if(u_has1==1)o*=luma(texture(u_t1,uv).rgb);return vec4(c.rgb,c.a*o);}`},
@@ -1276,19 +1276,27 @@ vec3 blendMode(vec3 a,vec3 b,int m){
  return clamp(a-luma(a)+luma(b),0.,1.);}
 `;
 const FMAIN=`
-void main(){vec4 c=fx(v_uv);if(u_last==1){float m=u_mix;if(u_hasMask==1)m*=luma(texture(u_mask,v_uv).rgb);c.rgb=mix(texture(u_in,v_uv).rgb,c.rgb,m);}o=vec4(clamp(c.rgb,0.,1.),1.);}`;
+void main(){vec4 c=fx(v_uv);float ia=texture(u_in,v_uv).a;
+#ifdef OWN_A
+float oa=c.a;
+#else
+float oa=ia;
+#endif
+if(u_last==1){float m=u_mix;if(u_hasMask==1)m*=luma(texture(u_mask,v_uv).rgb);c.rgb=mix(texture(u_in,v_uv).rgb,c.rgb,m);oa=mix(ia,oa,m);}o=vec4(clamp(c.rgb,0.,1.),clamp(oa,0.,1.));}`;
 const NMAIN=`
 void main(){o=clamp(node(v_uv),0.,1.);}`;
 function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const log=gl.getShaderInfoLog(s);gl.deleteShader(s);throw new Error(log);}return s;}
-let vsObj=null,alphaProg=null,joinProg=null;
+let vsObj=null,alphaProg=null,joinProg=null,premulProg=null;
+/* Filtros que mueven o promedian píxeles: la transparencia se procesa con ellos (premultiplicado) */
+const ALPHA_WARP=new Set(['gblur','mblur','zblur','chroma']);
 const UNITS=[['u_tex',0],['u_in',1],['u_mask',2],['u_t0',0],['u_t1',1],['u_t2',2],['u_img',3]];
 function program(fs){const p=gl.createProgram();gl.attachShader(p,vsObj);gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fs));gl.bindAttribLocation(p,0,'a');gl.linkProgram(p);
   if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
   const cache=new Map();const U=n=>{if(!cache.has(n))cache.set(n,gl.getUniformLocation(p,n));return cache.get(n);};
   gl.useProgram(p);UNITS.forEach(([n,u])=>{const l=U(n);if(l)gl.uniform1i(l,u);});return{p,U};}
 const decl=ps=>ps.filter(p=>p.k[0]!=='_'&&p.t!=='x').map(p=>p.t==='c'?`uniform vec3 p_${p.k};`:`uniform float p_${p.k};`).join('\n');
-function filterProg(f){if(!f._prog)f._prog=program(HEAD+decl(f.params)+'\n'+(f.uniforms||'')+'\n'+f.glsl+FMAIN);return f._prog;}
+function filterProg(f){if(!f._prog)f._prog=program(HEAD.replace('\n','\n'+(f.ownAlpha?'#define OWN_A\n':''))+decl(f.params)+'\n'+(f.uniforms||'')+'\n'+f.glsl+FMAIN);return f._prog;}
 let placeProg=null;
 /* Copia una textura centrada a escala 1:1 en otra de distinto tamaño (lo que sobra queda transparente) */
 function placeInto(src,dst){if(!placeProg)placeProg=program(`#version 300 es
@@ -1309,12 +1317,14 @@ function initGL(){
 precision highp float;uniform sampler2D u_tex;in vec2 v_uv;out vec4 o;void main(){o=texture(u_tex,v_uv);}`);
   mixProg=program(`#version 300 es
 precision highp float;uniform sampler2D u_tex;uniform sampler2D u_in;uniform sampler2D u_mask;uniform int u_hasMask;uniform float u_mix;in vec2 v_uv;out vec4 o;
-void main(){float m=u_mix;if(u_hasMask==1)m*=dot(texture(u_mask,v_uv).rgb,vec3(.2126,.7152,.0722));o=vec4(mix(texture(u_in,v_uv).rgb,texture(u_tex,v_uv).rgb,m),1.);}`);
+void main(){float m=u_mix;if(u_hasMask==1)m*=dot(texture(u_mask,v_uv).rgb,vec3(.2126,.7152,.0722));o=vec4(mix(texture(u_in,v_uv).rgb,texture(u_tex,v_uv).rgb,m),texture(u_in,v_uv).a);}`);
   /* Deformaciones: el alfa se pasa como gris, se deforma igual que el color y se vuelve a unir */
   alphaProg=program(`#version 300 es
 precision highp float;uniform sampler2D u_tex;in vec2 v_uv;out vec4 o;void main(){float a=texture(u_tex,v_uv).a;o=vec4(a,a,a,1.);}`);
+  premulProg=program(`#version 300 es
+precision highp float;uniform sampler2D u_tex;in vec2 v_uv;out vec4 o;void main(){vec4 c=texture(u_tex,v_uv);o=vec4(c.rgb*c.a,c.a);}`);
   joinProg=program(`#version 300 es
-precision highp float;uniform sampler2D u_tex;uniform sampler2D u_in;in vec2 v_uv;out vec4 o;void main(){o=vec4(texture(u_tex,v_uv).rgb,texture(u_in,v_uv).r);}`);
+precision highp float;uniform sampler2D u_tex;uniform sampler2D u_in;in vec2 v_uv;out vec4 o;void main(){vec3 A=texture(u_in,v_uv).rgb;float a=max(A.r,max(A.g,A.b));vec3 c=texture(u_tex,v_uv).rgb;o=vec4(a>.002?clamp(c/a,0.,1.):vec3(0.),a);}`);
   dummyTex=mkTex(1,1,new Uint8Array([0,0,0,255]));
 }
 /* Pool de texturas: se reusan entre renders; se liberan las de tamaños viejos */
@@ -1415,13 +1425,14 @@ function runNode(n,T,ins,out,W,H,scale){
     for(let k=0;k<np;k++){const last=k===np-1;let dst=out;if(!last){const t=acquire(W,H);temps.push(t);dst=t;}
       bindUnits([src,inT,maskT]);gl.uniform1i(U('u_pass'),k);gl.uniform1i(U('u_last'),last?1:0);drawTo(dst,W,H);src=dst.tex;}
     temps.forEach(release);};
-    if(f.cat!=='distorsion'||!ins[0]){run(inT,out);return;}
-    /* Deformar respetando la transparencia: misma deformación sobre el alfa */
-    const aIn=acquire(W,H),aOut=acquire(W,H),cOut=acquire(W,H);
+    if((f.cat!=='distorsion'&&!ALPHA_WARP.has(f.id))||!ins[0]){run(inT,out);return;}
+    /* Deformar o desenfocar respetando la transparencia: el alfa pasa por el mismo filtro y el color va premultiplicado */
+    const aIn=acquire(W,H),aOut=acquire(W,H),pIn=acquire(W,H),cOut=acquire(W,H);
     gl.useProgram(alphaProg.p);bindUnits([inT]);drawTo(aIn,W,H);
-    run(aIn.tex,aOut);run(inT,cOut);
+    gl.useProgram(premulProg.p);bindUnits([inT]);drawTo(pIn,W,H);
+    run(aIn.tex,aOut);run(pIn.tex,cOut);
     gl.useProgram(joinProg.p);bindUnits([cOut.tex,aOut.tex]);drawTo(out,W,H);
-    [aIn,aOut,cOut].forEach(release);return;
+    [aIn,aOut,pIn,cOut].forEach(release);return;
   }
   const pr=nodeProg(T),U=pr.U;gl.useProgram(pr.p);
   let im=T.image?images.get(n.uid):T.paint?ensurePaint(n):T.text?textTex(n,W,H):null;let direct=0;
