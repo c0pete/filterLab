@@ -414,10 +414,10 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
         <button class="ib" id="floatBtn" title="Desacoplar la vista previa (ventana flotante)" aria-label="Desacoplar vista previa" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="5.5" width="9" height="8" rx="1"/><path d="M6 5.5V3a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1v5.5a1 1 0 0 1-1 1H10.5"/></svg></button>
         <div class="xsplit" id="xsplit"><button class="ib xbtn" id="xmenuBtn" aria-haspopup="menu" aria-expanded="false" title="Exportar" aria-label="Exportar"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v8.5M4.8 7.3 8 10.5l3.2-3.2M2.5 13.5h11"/></svg></button>
           <div class="xmenu" id="xmenu" role="menu" hidden>
-            <button role="menuitem" id="exportBtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="m2.5 11 3.5-3.5 3 3 2-2 2.5 2.5"/></svg>Exportar imagen…</button>
-            <button role="menuitem" id="copyBtn" title="Para pegar en Photoshop con Ctrl+V"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>Copiar al portapapeles</button>
-            <button role="menuitem" id="psdAllBtn" title="Un .psd con cada nodo como capa"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 2 6 3-6 3-6-3z"/><path d="m2 8 6 3 6-3M2 11l6 3 6-3"/></svg>Exportar PSD con capas</button>
-            <button role="menuitem" data-for="batchIn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4.5" y="2" width="9.5" height="9.5" rx="1"/><path d="M2 4.5v9.5h9.5"/></svg>Exportar lote (.zip)…</button>
+            <button role="menuitem" id="copyBtn" title="Para pegar en Photoshop con Ctrl+V"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>Copiar imagen</button>
+            <button role="menuitem" id="exportBtn" title="PNG del nodo Salida en resolución completa. Con Shift: más formatos y opciones"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="m2.5 11 3.5-3.5 3 3 2-2 2.5 2.5"/></svg>Guardar PNG</button>
+            <button role="menuitem" id="psdAllBtn" title="Un .psd con cada nodo como capa"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 2 6 3-6 3-6-3z"/><path d="m2 8 6 3 6-3M2 11l6 3 6-3"/></svg>Guardar lote PSD</button>
+            <button role="menuitem" data-for="batchIn" title="Aplica el grafo a varias imágenes y las guarda en un .zip"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4.5" y="2" width="9.5" height="9.5" rx="1"/><path d="M2 4.5v9.5h9.5"/></svg>Guardar lote ZIP…</button>
           </div>
         </div>
         <button class="ib" id="orient" title="Cambiar a paneles arriba y abajo" aria-label="Cambiar orientación de paneles"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2.5" width="12" height="11" rx="1"/><path d="M8 2.5v11"/></svg></button>
@@ -591,13 +591,13 @@ const FILTERS=[
   float w=1.-l;float aa=1.2/(sp*u_scale);float m=ss(w+aa,w-aa,f)*ss(0.,.05,w);
   if(p_cross>.5){vec2 q2=rot(P,radians(p_angle+90.));float f2=abs(fract(q2.y/sp)-.5)*2.;float w2=clamp((.45-l)*2.2,0.,1.);m=max(m,ss(w2+aa,w2-aa,f2)*ss(0.,.05,w2));}
   return vec4(mix(p_paper,p_ink,m),1.);}`},
-{id:'border',cat:'composicion',name:'Borde',ownAlpha:true,desc:'Marco plano o con degradado, adentro o afuera de la imagen',
- params:[S('place','Ubicación',['Adentro (cubre la imagen)','Afuera (achica la imagen)']),R('w','Grosor',0,400,32,1,'px'),R('radius','Esquinas redondeadas',0,400,0,1,'px'),
+{id:'border',cat:'composicion',name:'Borde',ownAlpha:true,desc:'Marco plano o con degradado, adentro o afuera del documento, o alrededor del contorno de un PNG transparente',
+ params:[S('place','Ubicación',['Adentro (cubre la imagen)','Afuera (achica la imagen)','Contorno de la imagen','Automático (contorno si hay transparencia)'],3),R('w','Grosor',0,400,32,1,'px'),R('radius','Esquinas redondeadas',0,400,0,1,'px'),
   S('type','Relleno',['Plano','Degradado lineal','Degradado hacia adentro']),C('c1','Color A','#f4efe4'),C('c2','Color B','#e2508f'),R('angle','Ángulo',0,360,90,1,'°'),
   R('line','Filete interior',0,20,0,.5,'px'),C('lc','Color del filete','#151513')],
  glsl:`float sdb(vec2 p,vec2 b,float r){r=min(r,min(b.x,b.y));vec2 q=abs(p)-b+r;return length(max(q,0.))+min(max(q.x,q.y),0.)-r;}
  vec4 fx(vec2 uv){vec2 P=uv*u_res;float w=p_w*u_scale;vec2 hb=max(u_res*.5-w,vec2(1.));float d=sdb(P-u_res*.5,hb,p_radius*u_scale);
-  vec4 I4=p_place<.5?T(uv):T(clamp((P-w)/max(u_res-2.*w,vec2(1.)),0.,1.));vec3 img=I4.rgb;float ia=I4.a;
+  vec4 I4=(p_place<.5||p_place>1.5)?T(uv):T(clamp((P-w)/max(u_res-2.*w,vec2(1.)),0.,1.));vec3 img=I4.rgb;float ia=I4.a;
   int t=int(p_type+.5);float g;
   if(t==1){float a=radians(p_angle);vec2 dir=vec2(cos(a),sin(a));vec2 c=(uv-.5)*vec2(u_res.x/u_res.y,1.);float ext=abs(dir.x)*u_res.x/u_res.y*.5+abs(dir.y)*.5;g=dot(c,dir)/ext*.5+.5;}
   else if(t==2)g=clamp(d/max(w,1.),0.,1.);else g=0.;
@@ -1183,6 +1183,9 @@ const NT={
  opacity:{name:'Opacidad',cat:'composicion',desc:'Baja la opacidad de lo que entra (queda transparente). Para verlo sobre otra imagen usá Mezclar',inputs:[{k:'in',l:'Entrada'},{k:'mask',l:'Máscara',mask:1}],
   params:[R('op','Opacidad',0,1,.5,.01)],
   glsl:`vec4 node(vec2 uv){if(u_has0==0)return vec4(0.);vec4 c=texture(u_t0,uv);float o=p_op;if(u_has1==1)o*=luma(texture(u_t1,uv).rgb);return vec4(c.rgb,c.a*o);}`},
+ expand:{name:'Expandir contorno',cat:'composicion',desc:'Agranda o achica parejo el contorno de un PNG transparente (sobreimpresión). Relleno de color o estirando los colores del borde',inputs:[{k:'in',l:'Entrada'}],custom:'expand',
+  params:[R('amt','Expandir',-100,300,8,.5,'px'),S('fill','Relleno',['Color','Colores del borde (sangrado)']),Object.assign(C('color','Color','#ffffff'),{show:P=>+P.fill===0})],
+  onParam(P,k){return k==='fill';}},
  canvas:{name:'Recortar',cat:'basicos',desc:'Fija el tamaño en píxeles de lo que sigue después. Lo que entra queda centrado a tamaño real: lo que sobra se recorta y lo que falta se rellena con el fondo',inputs:[{k:'in',l:'Entrada'}],
   params:[S('preset','Formato',CANVAS_PRESETS.map(x=>x[0]),0),N('w','Ancho',1080,16,8192,'px'),N('h','Alto',1080,16,8192,'px'),S('fit','Ajuste',['Tamaño real','Encajar','Cubrir']),S('anchor','Anclaje',['Centro','Arriba','Abajo','Izquierda','Derecha','Arriba izquierda','Arriba derecha','Abajo izquierda','Abajo derecha']),C('bg','Fondo vacío','#000000')],noFit:true,
   onParam(P,k){if(k==='preset'){const pr=CANVAS_PRESETS[+P.preset];if(pr&&pr[1]){P.w=pr[1];P.h=pr[2];return true;}}else if(k==='w'||k==='h'){const i=CANVAS_PRESETS.findIndex(x=>x[1]===+P.w&&x[2]===+P.h);const np=i>0?i:0;if(np!==+P.preset){P.preset=np;return true;}}},
@@ -1231,7 +1234,7 @@ const NGROUPS=[['Herramientas',[['entrada','Entrada'],['color','Ajustes'],['comp
  ['Generar',[['patrones','Patrones'],['texturas','Texturas']]],
  ['Estilos',[['impreso','Impreso'],['pantalla','Pantalla'],['textil','Textil'],['analogico','Analógico'],['artistico','Artístico']]]];
 const RECAT={opacity:'composicion',dropshadow:'desenfoque',outerglow:'desenfoque',image:'entrada',canvas:'distorsion',text:'entrada',border:'desenfoque',paint:'entrada',color:'entrada',gradient:'entrada',output:'entrada',reroute:'composicion',
- blend:'composicion',lumamask:'composicion',channel:'composicion',merge:'composicion',edges:'desenfoque',transform:'distorsion',
+ blend:'composicion',expand:'composicion',lumamask:'composicion',channel:'composicion',merge:'composicion',edges:'desenfoque',transform:'distorsion',
  invert:'color',levels:'color',oil:'artistico',hsl:'color',posterize:'color',threshold:'color',chmixer:'color',selective:'color',recolor:'color',adjust:'color',curves:'color',gradmap:'color'};
 Object.entries(NT).forEach(([k,T])=>{if(RECAT[k])T.cat=RECAT[k];else if(T.cat==='general')T.cat='desenfoque';});
 NGROUPS[0][0]='Herramientas';NGROUPS.forEach(g=>g[1].forEach(c=>{if(!NCATS.some(x=>x[0]===c[0]))NCATS.push(c);CATNAME[c[0]]=c[1];}));
@@ -1411,10 +1414,60 @@ function evaluate(target,W,H,keepAll,kFix){
   if(kFix&&res&&(res.w!==W||res.h!==H)){const t=acquire(W,H);placeInto(res,t);release(res);memo.set(target,t);res=t;}
   return{res,memo};
 }
+/* Distancia al contorno con jump flooding: cada píxel guarda la coordenada del píxel opaco (o transparente) más cercano */
+const JFA_E=`vec4 enc(vec2 p){p=floor(p+.5);return vec4(floor(p.x/256.),mod(p.x,256.),floor(p.y/256.),mod(p.y,256.))/255.;}
+vec2 dec(vec4 v){v=floor(v*255.+.5);return vec2(v.r*256.+v.g,v.b*256.+v.a);}
+float jd(sampler2D t,ivec2 q){vec2 s=dec(texelFetch(t,q,0));return s.x>65000.?1e6:max(length(s-vec2(q))-.5,0.);}`;
+let jfaSeed=null,jfaStep=null,alphaChk=null;
+function jfaProgs(){if(jfaSeed)return;
+  jfaSeed=program(`#version 300 es
+precision highp float;uniform sampler2D u_tex;uniform int u_inv;out vec4 o;${JFA_E}
+void main(){ivec2 q=ivec2(gl_FragCoord.xy);bool on=texelFetch(u_tex,q,0).a>=.5;if(u_inv==1)on=!on;o=on?enc(vec2(q)):vec4(1.);}`);
+  jfaStep=program(`#version 300 es
+precision highp float;uniform sampler2D u_tex;uniform int u_k;out vec4 o;${JFA_E}
+void main(){ivec2 q=ivec2(gl_FragCoord.xy);ivec2 sz=textureSize(u_tex,0);vec2 best=vec2(0.);float bd=1e20;
+ for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){ivec2 r=q+ivec2(x,y)*u_k;if(r.x<0||r.y<0||r.x>=sz.x||r.y>=sz.y)continue;vec2 s=dec(texelFetch(u_tex,r,0));if(s.x>65000.)continue;vec2 d=s-vec2(q);float dd=dot(d,d);if(dd<bd){bd=dd;best=s;}}
+ o=bd<1e19?enc(best):vec4(1.);}`);}
+function jfa(tex,W,H,R,inv){jfaProgs();let a=acquire(W,H),b=acquire(W,H);gl.useProgram(jfaSeed.p);gl.uniform1i(jfaSeed.U('u_inv'),inv?1:0);bindUnits([tex]);drawTo(a,W,H);
+  let k=1;while(k<R)k*=2;const ks=[];for(;k>=1;k>>=1)ks.push(k);ks.push(1);
+  gl.useProgram(jfaStep.p);for(const s of ks){gl.uniform1i(jfaStep.U('u_k'),s);bindUnits([a.tex]);drawTo(b,W,H);const t=a;a=b;b=t;}
+  release(b);return a;}
+/* ¿La entrada tiene zonas transparentes? (para Borde automático) */
+function texHasAlpha(tex){const S=48;if(!alphaChk)alphaChk=program(`#version 300 es
+precision highp float;uniform sampler2D u_tex;in vec2 v_uv;out vec4 o;void main(){float m=1.;for(int y=0;y<4;y++)for(int x=0;x<4;x++)m=min(m,texture(u_tex,v_uv+(vec2(x,y)-1.5)/${S*4}.).a);o=vec4(m);}`);
+  const t=acquire(S,S);gl.useProgram(alphaChk.p);bindUnits([tex]);drawTo(t,S,S);const px=new Uint8Array(S*S*4);gl.readPixels(0,0,S,S,gl.RGBA,gl.UNSIGNED_BYTE,px);release(t);
+  for(let i=3;i<px.length;i+=4)if(px[i]<250)return true;return false;}
+function setParams(pr,params,P){for(const p of params){if(p.k[0]==='_'||p.t==='x')continue;const v=P[p.k];if(p.t==='c')gl.uniform3fv(pr.U('p_'+p.k),hex(v));else gl.uniform1f(pr.U('p_'+p.k),+v);}}
+function contourBorder(f,P,inT,maskT,out,W,H,scale){
+  if(!f._cprog)f._cprog=program(HEAD+decl(f.params)+'\n'+JFA_E+`
+void main(){vec2 uv=v_uv;vec4 I=texture(u_tex,uv);ivec2 q=ivec2(gl_FragCoord.xy);float d=I.a>=.5?0.:jd(u_t1,q);
+ float w=p_w*u_scale,lw=p_line*u_scale;float sm=(1.-smoothstep(w-.5,w+.5,d))*step(.01,w);
+ int t=int(p_type+.5);float g=0.;
+ if(t==1){float a=radians(p_angle);vec2 dir=vec2(cos(a),sin(a));vec2 c=(uv-.5)*vec2(u_res.x/u_res.y,1.);float ext=abs(dir.x)*u_res.x/u_res.y*.5+abs(dir.y)*.5;g=dot(c,dir)/ext*.5+.5;}
+ else if(t==2)g=1.-clamp(d/max(w,1.),0.,1.);
+ vec3 col=mix(p_c1,p_c2,clamp(g,0.,1.));float lm=lw>0.?(1.-smoothstep(lw-.5,lw+.5,d))*sm:0.;col=mix(col,p_lc,lm);
+ float a=I.a+sm*(1.-I.a);vec3 rgb=a>0.?(I.rgb*I.a+col*sm*(1.-I.a))/a:vec3(0.);
+ float m=u_mix;if(u_hasMask==1)m*=luma(texture(u_mask,uv).rgb);o=vec4(clamp(mix(I.rgb,rgb,m),0.,1.),mix(I.a,a,m));}`);
+  const sd=jfa(inT,W,H,Math.ceil(+P.w*scale)+3,false);const pr=f._cprog;gl.useProgram(pr.p);
+  gl.uniform2f(pr.U('u_res'),W,H);gl.uniform1f(pr.U('u_scale'),scale);gl.uniform1f(pr.U('u_mix'),P._mix==null?1:+P._mix);gl.uniform1i(pr.U('u_hasMask'),maskT?1:0);setParams(pr,f.params,P);
+  bindUnits([inT,sd.tex,maskT]);drawTo(out,W,H);release(sd);}
+function expandNode(T,P,inT,out,W,H,scale){
+  if(!T._prog)T._prog=program(HEAD+decl(T.params)+'\n'+JFA_E+`
+void main(){ivec2 q=ivec2(gl_FragCoord.xy);vec4 I=texture(u_tex,v_uv);float e=p_amt*u_scale;
+ if(e>=0.){vec2 s=dec(texelFetch(u_t1,q,0));float d=I.a>=.5?0.:jd(u_t1,q);float sm=e<.01?0.:1.-smoothstep(e-.5,e+.5,d);
+  vec3 f=p_fill<.5?p_color:(s.x>65000.?vec3(0.):texelFetch(u_tex,ivec2(s),0).rgb);
+  float a=I.a+sm*(1.-I.a);o=vec4(a>0.?(I.rgb*I.a+f*sm*(1.-I.a))/a:vec3(0.),a);}
+ else{float d=I.a<.5?0.:jd(u_t2,q);o=vec4(I.rgb,I.a*smoothstep(-e-.5,-e+.5,d));}}`);
+  if(!inT){gl.bindFramebuffer(gl.FRAMEBUFFER,out.fb);gl.viewport(0,0,W,H);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);return;}
+  const e=+P.amt*scale,R=Math.ceil(Math.abs(e))+3;const so=e>=0?jfa(inT,W,H,R,false):null,si=e<0?jfa(inT,W,H,R,true):null;
+  const pr=T._prog;gl.useProgram(pr.p);gl.uniform2f(pr.U('u_res'),W,H);gl.uniform1f(pr.U('u_scale'),scale);setParams(pr,T.params,P);
+  bindUnits([inT,so?so.tex:null,si?si.tex:null]);drawTo(out,W,H);release(so);release(si);}
 function runNode(n,T,ins,out,W,H,scale){
   const P=n.params;
+  if(T.custom==='expand'){expandNode(T,P,ins[0]?ins[0].tex:null,out,W,H,scale);return;}
   if(T.filter){
     const f=T.filter,inT=ins[0]?ins[0].tex:dummyTex,maskT=ins[1]?ins[1].tex:null;
+    if(f.id==='border'&&ins[0]&&(+P.place===2||(+P.place===3&&texHasAlpha(inT)))){contourBorder(f,P,inT,maskT,out,W,H,scale);return;}
     if(f.cpu){
       if(!readBuf||readBuf.length!==W*H*4)readBuf=new Uint8Array(W*H*4);
       if(ins[0]){gl.bindFramebuffer(gl.FRAMEBUFFER,ins[0].fb);gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,readBuf);}else readBuf.fill(0);
@@ -1792,6 +1845,7 @@ displace:'<path d="M3 5h14M3 10h4c2 0 2-3 4-3s2 3 4 3h2M3 15h14"/><path d="M15 1
 image:'<rect x="2.5" y="4" width="15" height="12" rx="1.5"/><path d="M2.5 13.5l4-4 3.5 3.5 2.5-2.5 5 4.5"/><circle cx="13.5" cy="7.5" r="1.3"/>',
 color:'<circle cx="10" cy="10" r="6" fill="currentColor"/>',
 gradient:'<rect x="3" y="3" width="14" height="14" rx="1.5"/><g fill="currentColor" stroke="none"><rect x="3" y="3" width="3.5" height="14" fill-opacity=".1"/><rect x="6.5" y="3" width="3.5" height="14" fill-opacity=".35"/><rect x="10" y="3" width="3.5" height="14" fill-opacity=".6"/><rect x="13.5" y="3" width="3.5" height="14" fill-opacity=".9"/></g>',
+expand:'<path d="M10 5.5 14 10l-4 4.5L6 10z" fill="currentColor" fill-opacity=".35"/><path d="M10 2.5 17.5 10 10 17.5 2.5 10z" stroke-dasharray="2 1.6"/>',
 blend:'<circle cx="7.5" cy="10" r="5"/><circle cx="12.5" cy="10" r="5" fill="currentColor" fill-opacity=".3"/>',
 lumamask:'<circle cx="10" cy="10" r="6.5"/><path d="M10 3.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/>',
 channel:'<circle cx="10" cy="7" r="3.5" fill="currentColor"/><circle cx="7" cy="12.5" r="3.5"/><circle cx="13" cy="12.5" r="3.5"/>',
@@ -2547,7 +2601,7 @@ $('#exGo').onclick=async()=>{dlg.close();const n=byId(+expState.node)||outputNod
     if(clamped)toast(`Se limitó a ${W}×${H} px por la GPU`);const tag=n.type==='output'?'filtros':nodeLabel(n).toLowerCase().replace(/[^a-z0-9áéíóúñ]+/g,'-');
     await saveFile(`${baseName()}-${tag}-${W}x${H}.${ext}`,blob);}
   catch(err){busy(false);renderPreview();toast('Error al exportar: '+err.message);}};
-$('#exportBtn').onclick=()=>openExport(previewUid&&byId(previewUid)?previewUid:null);
+{const quickPNG=$('#exportBtn').onclick;$('#exportBtn').onclick=e=>(e&&(e.shiftKey||e.altKey))?openExport(previewUid&&byId(previewUid)?previewUid:null):quickPNG();}
 $('#copyBtn').onclick=()=>copyNode(previewUid&&byId(previewUid)?previewUid:outputNode().uid);
 $('#psdAllBtn').onclick=()=>{const o=outputNode();if(!o||!edgeInto(o.uid,'in')){toast('Conectá algo al nodo Salida para exportar');return;}
   const keep={node:expState.node,fmt:expState.fmt,layers:expState.layers};expState.node=o.uid;expState.fmt='psd';
