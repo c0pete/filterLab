@@ -1039,7 +1039,7 @@ const NT={
    else if(p_type<1.5)t=length(p-A)/L;
    else{vec2 r=rot(p-A,-atan(d.y,d.x)+.785398);t=(abs(r.x)+abs(r.y))/(L*1.41421);}
    t=clamp(t,0.,1.);t=t<p_mid?t/p_mid*.5:.5+(t-p_mid)/(1.-p_mid)*.5;return vec4(mix(p_c1,p_c2,t),mix(p_a1,p_a2,t));}`},
- blend:{name:'Mezclar',cat:'basicos',desc:'Funde un frente sobre un fondo, con modo, opacidad y máscara (blanco muestra el frente). Sin frente, la máscara recorta el fondo: blanco queda, negro se vuelve transparente. Para mover o escalar el frente, poné un Transformar antes',inputs:[{k:'a',l:'Fondo'},{k:'b',l:'Frente'},{k:'mask',l:'Máscara',mask:1}],
+ blend:{name:'Mezclar',cat:'basicos',desc:'Funde un frente sobre un fondo, con modo, opacidad y máscara (blanco muestra el frente). Sin frente, la máscara recorta el fondo: blanco queda, negro se vuelve transparente. Para mover o escalar el frente, poné un Transformar antes',inputs:[{k:'a',l:'Fondo'},{k:'b',l:'Frente'},{k:'mask',l:'Máscara',mask:1}],pinOrder:[1,0,2],
   params:[S('mode','Fusión',BLEND_NAMES,0),R('opacity','Opacidad',0,1,1,.01)],
   glsl:`vec4 node(vec2 uv){vec4 A=texture(u_t0,uv);vec3 a=u_has0==1?A.rgb:vec3(0.);float aa=u_has0==1?A.a:0.;if(u_has1==0){float k=u_has2==1?luma(texture(u_t2,uv).rgb):1.;return vec4(a,(u_has0==1?aa:1.)*mix(1.,k,p_opacity));}
    vec4 B=texture(u_t1,uv);
@@ -1841,7 +1841,7 @@ function makeNode(n){
   h.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;startNodeDrag(e,n,d);});
   d.appendChild(h);
   const ports=el('div','ports');const pins=el('div','pins');
-  T.inputs.forEach(inp=>{const p=el('div','pin'+(inp.mask?' mask':'')+(edgeInto(n.uid,inp.k)?' on':''));p.dataset.port=inp.k;const dot=el('span','dot');dot.dataset.uid=n.uid;dot.dataset.port=inp.k;dot.dataset.dir='in';p.append(dot,document.createTextNode(inp.l));pins.appendChild(p);});
+  (T.pinOrder?T.pinOrder.map(i=>T.inputs[i]):T.inputs).forEach(inp=>{const p=el('div','pin'+(inp.mask?' mask':'')+(edgeInto(n.uid,inp.k)?' on':''));p.dataset.port=inp.k;const dot=el('span','dot');dot.dataset.uid=n.uid;dot.dataset.port=inp.k;dot.dataset.dir='in';p.append(dot,document.createTextNode(inp.l));pins.appendChild(p);});
   ports.appendChild(pins);
   if(!T.noOut){const po=el('div','pout');const dot=el('span','dot');dot.dataset.uid=n.uid;dot.dataset.dir='out';po.append(document.createTextNode('Salida'),dot);ports.appendChild(po);}else ports.appendChild(el('span'));
   d.appendChild(ports);
