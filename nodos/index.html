@@ -248,7 +248,10 @@ svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;p
 .pout .dot{right:-8.5px;border-color:var(--accent);background:var(--accent)}
 .prm.pc{position:relative}.prm.pc>.dot{left:-17px;width:11px;height:11px;border-width:1.5px;border-style:dashed;opacity:.55}.prm.pc>.dot:hover,.prm.pc>.dot.hot,.prm.pc.lk>.dot{opacity:1;border-style:solid}
 .prm.pc.lk input[type=color]{opacity:.55;cursor:not-allowed}.prm.pc.lk label::after{content:" · enlazado";color:var(--muted);font-size:11px}
-.pv.picking,.pv.picking canvas{cursor:crosshair}.swl{display:grid;gap:6px}.swr{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:6px;align-items:center;position:relative}
+.pv.picking,.pv.picking canvas{cursor:crosshair}
+#loupe{position:fixed;z-index:9999;pointer-events:none;width:120px;padding:10px;background:#1b1a18;border:1px solid #3a3934;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:grid;gap:8px;justify-items:center}
+#loupe canvas{width:99px;height:99px;border-radius:6px;image-rendering:pixelated}#loupe i{display:block;width:99px;height:54px;border-radius:6px;border:1px solid rgba(255,255,255,.25)}#loupe b{font:600 13px var(--f-mono);color:#ece8de}
+.app.dragcol .prm.pc>.dot{opacity:1;border-style:solid;border-color:var(--accent);transform:scale(1.25)}.app.dragcol .prm.pc{outline:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px;border-radius:5px}.prm.pc.hotrow{outline:2px solid var(--accent)!important}.swl{display:grid;gap:6px}.swr{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:6px;align-items:center;position:relative}
 .swr input[type=color]{width:40px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--bg);padding:1px;cursor:pointer}
 .swr input.hx{width:100%;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:3px 6px;font:12px var(--f-mono);color:inherit;text-transform:uppercase}
 .swr .ib{width:24px;height:24px}.swr>.dot{right:-18.5px;border-color:var(--accent)}.swadd{justify-self:start}
@@ -1190,9 +1193,9 @@ const NT={
  opacity:{name:'Opacidad',cat:'composicion',desc:'Baja la opacidad de lo que entra (queda transparente). Para verlo sobre otra imagen usá Mezclar',inputs:[{k:'in',l:'Entrada'},{k:'mask',l:'Máscara',mask:1}],
   params:[R('op','Opacidad',0,1,.5,.01)],
   glsl:`vec4 node(vec2 uv){if(u_has0==0)return vec4(0.);vec4 c=texture(u_t0,uv);float o=p_op;if(u_has1==1)o*=luma(texture(u_t1,uv).rgb);return vec4(c.rgb,c.a*o);}`},
- eyedrop:{name:'Cuentagotas',cat:'basicos',desc:'Guarda hasta 6 colores (cuadro, hexadecimal o tomados de la pantalla). Conectá cada color a los parámetros de color de otros nodos',inputs:[],noOut:true,swatch:true,
-  params:[Object.assign(R('count','Colores',1,6,1,1),{hid:1}),...[0,1,2,3,4,5].map(i=>Object.assign(C('c'+i,'Color '+(i+1),['#e2508f','#4fc3d3','#f6c945','#6bdc7b','#8f7bff','#1c1b19'][i]),{hid:1}))],
-  glsl:`vec4 node(vec2 uv){int n=int(p_count+.5);int i=min(int(uv.x*float(n)),n-1);vec3 c=i==0?p_c0:i==1?p_c1:i==2?p_c2:i==3?p_c3:i==4?p_c4:p_c5;return vec4(c,1.);}`},
+ eyedrop:{name:'Cuentagotas',cat:'basicos',desc:'Guarda hasta 10 colores (cuadro, hexadecimal o tomados de la pantalla). Conectá cada color a los parámetros de color de otros nodos',inputs:[],noOut:true,swatch:true,
+  params:[Object.assign(R('count','Colores',1,10,1,1),{hid:1}),...[0,1,2,3,4,5,6,7,8,9].map(i=>Object.assign(C('c'+i,'Color '+(i+1),['#e2508f','#4fc3d3','#f6c945','#6bdc7b','#8f7bff','#1c1b19','#f4efe4','#ff8a3d','#3a2bd6','#9b6b4a'][i]),{hid:1}))],
+  glsl:`vec4 node(vec2 uv){int n=int(p_count+.5);int i=min(int(uv.x*float(n)),n-1);vec3 c=i==0?p_c0:i==1?p_c1:i==2?p_c2:i==3?p_c3:i==4?p_c4:i==5?p_c5:i==6?p_c6:i==7?p_c7:i==8?p_c8:p_c9;return vec4(c,1.);}`},
  expand:{name:'Expandir contorno',cat:'composicion',desc:'Agranda o achica parejo el contorno de un PNG transparente (sobreimpresión). Relleno de color o estirando los colores del borde',inputs:[{k:'in',l:'Entrada'}],custom:'expand',
   params:[R('amt','Expandir',-100,300,8,.5,'px'),S('fill','Relleno',['Color','Colores del borde (sangrado)']),Object.assign(C('color','Color','#ffffff'),{show:P=>+P.fill===0})],
   onParam(P,k){return k==='fill';}},
@@ -1610,9 +1613,8 @@ pv.addEventListener('wheel',e=>{e.preventDefault();const r=pv.getBoundingClientR
   const mx=e.clientX-r.left-r.width/2,my=e.clientY-r.top-r.height/2;
   pview.px=mx-(mx-pview.px)*nz/old;pview.py=my-(my-pview.py)*nz/old;pview.z=nz;pview.zoom='custom';setZoomSeg(null);scheduleRender();},{passive:false});
 let pvDrag=null;
-pv.addEventListener('pointerdown',e=>{if(pickTarget&&e.button===0){e.stopPropagation();const pt=pickTarget;pickTarget=null;pv.classList.remove('picking');const t=previewTarget();const r=cv.getBoundingClientRect();const u=(e.clientX-r.left)/r.width,v=(e.clientY-r.top)/r.height;
-    const n=byId(pt.uid);if(n&&t!=null&&u>=0&&u<1&&v>=0&&v<1){const d=docSize(),k=Math.min(1,1024/Math.max(d.w,d.h)),W=Math.max(1,Math.round(d.w*k)),H=Math.max(1,Math.round(d.h*k));const px=nodePixels(t,W,H);const i=(Math.floor(v*H)*W+Math.floor(u*W))*4;
-      n.params[pt.k]='#'+[px[i],px[i+1],px[i+2]].map(x=>x.toString(16).padStart(2,'0')).join('');syncLinks();pushHistory();buildGraphDOM();scheduleRender();}return;}
+pv.addEventListener('pointerdown',e=>{if(pickTarget&&e.button===0){e.stopPropagation();const pt=pickTarget,p=pickAt(e);endPick();
+    const n=byId(pt.uid);if(n&&p){n.params[pt.k]=p.hex;syncLinks();pushHistory();buildGraphDOM();scheduleRender();}return;}
   if(paintUid&&e.button===0&&!spaceDown){paintDown(e);return;}if(e.button!==0&&e.button!==1)return;if(pview.zoom==='fit'){pview.zoom='custom';setZoomSeg(null);}pvDrag={x:e.clientX,y:e.clientY,px:pview.px,py:pview.py};pv.setPointerCapture(e.pointerId);pv.classList.add('panning');});
 pv.addEventListener('pointermove',e=>{if(!pvDrag)return;pview.px=pvDrag.px+e.clientX-pvDrag.x;pview.py=pvDrag.py+e.clientY-pvDrag.y;positionCanvasOnly();});
 pv.addEventListener('pointerup',()=>{pvDrag=null;pv.classList.remove('panning');});
@@ -1865,7 +1867,7 @@ displace:'<path d="M3 5h14M3 10h4c2 0 2-3 4-3s2 3 4 3h2M3 15h14"/><path d="M15 1
 image:'<rect x="2.5" y="4" width="15" height="12" rx="1.5"/><path d="M2.5 13.5l4-4 3.5 3.5 2.5-2.5 5 4.5"/><circle cx="13.5" cy="7.5" r="1.3"/>',
 color:'<circle cx="10" cy="10" r="6" fill="currentColor"/>',
 gradient:'<rect x="3" y="3" width="14" height="14" rx="1.5"/><g fill="currentColor" stroke="none"><rect x="3" y="3" width="3.5" height="14" fill-opacity=".1"/><rect x="6.5" y="3" width="3.5" height="14" fill-opacity=".35"/><rect x="10" y="3" width="3.5" height="14" fill-opacity=".6"/><rect x="13.5" y="3" width="3.5" height="14" fill-opacity=".9"/></g>',
-eyedrop:'<path d="M13.5 3.2a1.9 1.9 0 0 1 2.7 2.7l-1.6 1.6-2.7-2.7z" fill="currentColor" fill-opacity=".3"/><path d="m11.3 5.4 2.7 2.7-6.6 6.6-3.1.4.4-3.1z"/>',
+eyedrop:'<path d="m3 17 .8-.8h2.4l7.3-7.3"/><path d="M3.8 16.2v-2.4l7.3-7.3"/><path d="m12.6 4.6 2.8-2.8a1.75 1.75 0 1 1 2.5 2.5l-2.8 2.8.3.3a1.75 1.75 0 1 1-2.5 2.5L9.8 6.8a1.75 1.75 0 1 1 2.5-2.5z"/>',
 expand:'<path d="M10 5.5 14 10l-4 4.5L6 10z" fill="currentColor" fill-opacity=".35"/><path d="M10 2.5 17.5 10 10 17.5 2.5 10z" stroke-dasharray="2 1.6"/>',
 blend:'<circle cx="7.5" cy="10" r="5"/><circle cx="12.5" cy="10" r="5" fill="currentColor" fill-opacity=".3"/>',
 lumamask:'<circle cx="10" cy="10" r="6.5"/><path d="M10 3.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/>',
@@ -2011,8 +2013,25 @@ function lutTex(str){if(lutCache.has(str))return lutCache.get(str);const c=parse
   gl.activeTexture(gl.TEXTURE0);lutCache.set(str,t);if(lutCache.size>24){const [k,v]=lutCache.entries().next().value;gl.deleteTexture(v);lutCache.delete(k);}return t;}
 const curveCh=new Map();
 /* Cuentagotas: filas de color con hexadecimal, toma de pantalla y un punto de salida por color */
-let pickTarget=null;
-function swatchCtl(n){const P=n.params;const w=el('div','swl');const N=Math.max(1,Math.min(6,Math.round(+P.count)||1));
+let pickTarget=null,pickBuf=null;
+/* Toma de color sobre la vista previa, con lupa al lado del puntero */
+function startPick(uid,k){const t=previewTarget();if(t==null){toast('No hay nada en la vista previa');return;}
+  const d=docSize(),q=Math.min(1,1024/Math.max(d.w,d.h)),W=Math.max(1,Math.round(d.w*q)),H=Math.max(1,Math.round(d.h*q));
+  pickBuf={px:nodePixels(t,W,H),W,H};pickTarget={uid,k};pv.classList.add('picking');toast('Hacé clic en la vista previa para tomar el color · Esc cancela');}
+function pickAt(e){if(!pickBuf)return null;const r=cv.getBoundingClientRect();const u=(e.clientX-r.left)/r.width,v=(e.clientY-r.top)/r.height;if(u<0||u>=1||v<0||v>=1)return null;
+  const {px,W,H}=pickBuf;const x=Math.floor(u*W),y=Math.floor(v*H);const at=(xx,yy)=>{xx=Math.min(W-1,Math.max(0,xx));yy=Math.min(H-1,Math.max(0,yy));const i=(yy*W+xx)*4;return[px[i],px[i+1],px[i+2],px[i+3]];};
+  const c=at(x,y);return{x,y,at,hex:'#'+c.slice(0,3).map(v=>v.toString(16).padStart(2,'0')).join('')};}
+function endPick(){pickTarget=null;pickBuf=null;pv.classList.remove('picking');const l=document.getElementById('loupe');if(l)l.hidden=true;}
+function loupeMove(e){if(!pickTarget)return;let l=document.getElementById('loupe');
+  if(!l){l=document.createElement('div');l.id='loupe';l.innerHTML='<canvas width="99" height="99"></canvas><i></i><b></b>';document.body.appendChild(l);}
+  const p=pickAt(e);if(!p){l.hidden=true;return;}l.hidden=false;
+  const x=l.querySelector('canvas').getContext('2d');for(let j=-4;j<=4;j++)for(let i=-4;i<=4;i++){const c=p.at(p.x+i,p.y+j);x.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;x.fillRect((i+4)*11,(j+4)*11,11,11);}
+  x.strokeStyle='#fff';x.lineWidth=1.5;x.strokeRect(44,44,11,11);
+  l.querySelector('i').style.background=p.hex;l.querySelector('b').textContent=p.hex.toUpperCase();
+  const vw=window.innerWidth,vh=window.innerHeight;let lx=e.clientX+22,ly=e.clientY+22;if(lx+120>vw)lx=e.clientX-142;if(ly+200>vh)ly=e.clientY-222;l.style.left=lx+'px';l.style.top=ly+'px';}
+window.addEventListener('pointermove',loupeMove);
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&pickTarget){endPick();e.stopPropagation();}},true);
+function swatchCtl(n){const P=n.params;const w=el('div','swl');const N=Math.max(1,Math.min(10,Math.round(+P.count)||1));
   const changed=(final)=>{syncLinks();drawWires();scheduleRender();if(final)pushHistory();};
   for(let i=0;i<N;i++){const k='c'+i;const r=el('div','swr');r.dataset.slot=i;
     const c=el('input');c.type='color';c.value=P[k];const hx=el('input','hx');hx.value=P[k];hx.maxLength=7;hx.spellcheck=false;hx.setAttribute('aria-label','Hexadecimal');
@@ -2020,16 +2039,16 @@ function swatchCtl(n){const P=n.params;const w=el('div','swl');const N=Math.max(
     c.oninput=()=>set(c.value);c.onchange=()=>set(c.value,true);
     hx.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')hx.blur();});
     hx.onchange=()=>{let v=hx.value.trim().replace(/^#?/,'#');if(/^#[0-9a-f]{3}$/i.test(v))v='#'+v.slice(1).split('').map(x=>x+x).join('');if(/^#[0-9a-f]{6}$/i.test(v))set(v.toLowerCase(),true);hx.value=P[k];};
-    const pk=el('button','ib');pk.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 3.2a1.9 1.9 0 0 1 2.7 2.7l-1.6 1.6-2.7-2.7z"/><path d="m11.3 5.4 2.7 2.7-6.6 6.6-3.1.4.4-3.1z"/></svg>';
-    pk.title='Tomar un color de la pantalla';pk.setAttribute('aria-label','Cuentagotas');
-    pk.onclick=async e=>{e.stopPropagation();if(window.EyeDropper){try{const r=await new EyeDropper().open();set(r.sRGBHex.length===7?r.sRGBHex.toLowerCase():rgbToHex(r.sRGBHex),true);}catch(_){} }
-      else{pickTarget={uid:n.uid,k};pv.classList.add('picking');toast('Hacé clic en la vista previa para tomar el color');}};
+    const pk=el('button','ib');pk.innerHTML='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="m3 17 .8-.8h2.4l7.3-7.3"/><path d="M3.8 16.2v-2.4l7.3-7.3"/><path d="m12.6 4.6 2.8-2.8a1.75 1.75 0 1 1 2.5 2.5l-2.8 2.8.3.3a1.75 1.75 0 1 1-2.5 2.5L9.8 6.8a1.75 1.75 0 1 1 2.5-2.5z"/></svg>';
+    pk.title='Tomar un color de la vista previa (Esc cancela). Con Shift: de cualquier parte de la pantalla';pk.setAttribute('aria-label','Cuentagotas');
+    pk.onclick=async e=>{e.stopPropagation();if(e.shiftKey&&window.EyeDropper){try{const r=await new EyeDropper().open();set(r.sRGBHex.length===7?r.sRGBHex.toLowerCase():rgbToHex(r.sRGBHex),true);}catch(_){}return;}
+      startPick(n.uid,k);};
     const del=el('button','ib');del.innerHTML=ICON.del;del.title='Quitar este color';del.setAttribute('aria-label','Quitar color');del.hidden=N<=1;
-    del.onclick=e=>{e.stopPropagation();for(let j=i;j<5;j++)P['c'+j]=P['c'+(j+1)];P.count=N-1;
+    del.onclick=e=>{e.stopPropagation();for(let j=i;j<9;j++)P['c'+j]=P['c'+(j+1)];P.count=N-1;
       G.edges=G.edges.filter(x=>!(x.from===n.uid&&(x.slot|0)===i));G.edges.forEach(x=>{if(x.from===n.uid&&(x.slot|0)>i)x.slot--;});syncLinks();pushHistory();buildGraphDOM();scheduleRender();};
     const dot=el('span','dot');dot.dataset.uid=n.uid;dot.dataset.dir='out';dot.dataset.slot=i;dot.title='Arrastrá hasta el punto de un color en otro nodo';dot.style.background=P[k];
     r.append(c,hx,pk,del,dot);w.appendChild(r);}
-  if(N<6){const add=el('button','btn small swadd','+ Color');add.onclick=e=>{e.stopPropagation();P.count=N+1;pushHistory();buildGraphDOM();scheduleRender();};w.appendChild(add);}
+  if(N<10){const add=el('button','btn small swadd','+ Color');add.onclick=e=>{e.stopPropagation();P.count=N+1;pushHistory();buildGraphDOM();scheduleRender();};w.appendChild(add);}
   [...'pointerdown,dblclick'.split(',')].forEach(t=>w.addEventListener(t,e=>{if(!e.target.closest('.dot'))e.stopPropagation();}));
   return w;}
 function rgbToHex(s){const m=s.match(/\d+/g);return m?'#'+m.slice(0,3).map(v=>(+v).toString(16).padStart(2,'0')).join(''):'#000000';}
@@ -2211,7 +2230,10 @@ graphEl.addEventListener('pointerup',e=>{
   if(dg.kind==='node'&&!dg.moved){const now=performance.now();if(lastTap.uid===dg.n.uid&&now-lastTap.t<400){togglePreview(dg.n.uid);lastTap={};}else lastTap={uid:dg.n.uid,t:now};}
   if(dg.kind==='wire'){
     document.querySelectorAll('.dot.hot').forEach(x=>x.classList.remove('hot'));
-    const hit=document.elementFromPoint(e.clientX,e.clientY);let dot=hit&&hit.closest('.dot');if(!dot)dot=nearestDot(e.clientX,e.clientY,dg.from!=null?'in':'out');let changed=!!dg.detached;
+    document.querySelector('.app')&&document.querySelector('.app').classList.remove('dragcol');document.querySelectorAll('.hotrow').forEach(x=>x.classList.remove('hotrow'));
+    const hit=document.elementFromPoint(e.clientX,e.clientY);let dot=hit&&hit.closest('.dot');
+    if(!dot&&hit&&dg.from!=null&&dg.slot!=null){const row=hit.closest('.prm.pc');if(row)dot=row.querySelector(':scope>.dot');else if(hit.closest('.node')&&!hit.closest('.node').querySelector('.prm.pc'))toast('Ese nodo no tiene colores para enlazar');else if(hit.closest('.node'))toast('Soltalo sobre una fila de color (por ejemplo Fibra o Papel)');}
+    if(!dot)dot=nearestDot(e.clientX,e.clientY,dg.from!=null?'in':'out');let changed=!!dg.detached;
     if(dot){const uid=+dot.dataset.uid;
       if(dg.from!=null&&dot.dataset.dir==='in')changed=connect(dg.from,uid,dot.dataset.port,dg.slot)||changed;
       else if(dg.to!=null&&dot.dataset.dir==='out')changed=connect(uid,dg.to,dg.port,dot.dataset.slot)||changed;}
@@ -2258,6 +2280,8 @@ function drawWires(){drawMinimap();
 }
 function updateTemp(e){let t=wiresSvg.querySelector('.temp');if(!t){t=document.createElementNS('http://www.w3.org/2000/svg','path');t.setAttribute('class','wire temp');wiresSvg.appendChild(t);}
   const m=toWorld(e.clientX,e.clientY);
+  {const ap=document.querySelector('.app');if(ap)ap.classList.toggle('dragcol',drag.from!=null&&drag.slot!=null);document.querySelectorAll('.hotrow').forEach(x=>x.classList.remove('hotrow'));
+   if(drag.from!=null&&drag.slot!=null){const h=document.elementFromPoint(e.clientX,e.clientY);const row=h&&h.closest('.prm.pc');if(row)row.classList.add('hotrow');}}
   if(drag.from!=null){const a=portPos(drag.from,null,'out',drag.slot);if(a)t.setAttribute('d',curve(a,m));}else{const b=portPos(drag.to,drag.port,'in');if(b)t.setAttribute('d',curve(m,b));}
   document.querySelectorAll('.dot.hot').forEach(x=>x.classList.remove('hot'));
   const hit=document.elementFromPoint(e.clientX,e.clientY);let dot=hit&&hit.closest('.dot');if(!dot||dot.dataset.dir!==(drag.from!=null?'in':'out'))dot=nearestDot(e.clientX,e.clientY,drag.from!=null?'in':'out');
