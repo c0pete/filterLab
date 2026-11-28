@@ -248,23 +248,25 @@ const FILTERS=[
 /* ---------------- IMPRESO ---------------- */
 {id:'halftone',cat:'impreso',name:'Semitono',desc:'Trama de puntos, líneas o cruces con ángulo',
  params:[R('size','Tamaño de celda',2,80,10,.5,'px'),R('angle','Ángulo',0,180,45,1,'°'),S('shape','Forma',['Punto','Línea','Cruz','Cuadrado','Elipse']),R('gain','Ganancia de punto',-.5,.5,0,.01),C('ink','Tinta','#1a1a1a'),C('paper','Papel','#f2ede3'),B('invert','Invertir')],
- glsl:`vec4 fx(vec2 uv){float s=max(p_size*u_scale,1.5);vec2 P=uv*u_res;float a=radians(p_angle);
+ glsl:`float htR(float d){if(d<=PI*.25)return sqrt(d/PI);float lo=.5,hi=.70711;for(int i=0;i<16;i++){float r=(lo+hi)*.5;float c=PI*r*r-4.*(r*r*acos(.5/r)-.5*sqrt(r*r-.25));if(c<d)lo=r;else hi=r;}return (lo+hi)*.5;}
+ vec4 fx(vec2 uv){float s=max(p_size*u_scale,1.5);vec2 P=uv*u_res;float a=radians(p_angle);
  vec2 q=rot(P,a)/s;vec2 cell=floor(q)+.5;vec2 f=q-cell;vec2 cc=rot(cell*s,-a)/u_res;
  float d=1.-luma(Tc(cc));if(p_invert>.5)d=1.-d;d=clamp(d+p_gain,0.,1.);
  float aa=1.2/s;float m;int sh=int(p_shape+.5);
- if(sh==0){float r=sqrt(d/PI);m=ss(r+aa,r-aa,length(f));}
+ if(sh==0){float r=htR(d);m=ss(r+aa,r-aa,length(f));}
  else if(sh==1){float w=d*.5;m=ss(w+aa,w-aa,abs(f.y));}
  else if(sh==2){float w=(1.-sqrt(1.-d))*.5;m=ss(w+aa,w-aa,min(abs(f.x),abs(f.y)));}
  else if(sh==3){float h=sqrt(d)*.5;m=ss(h+aa,h-aa,max(abs(f.x),abs(f.y)));}
- else{float r=sqrt(d/PI);m=ss(r+aa,r-aa,length(f*vec2(.72,1.39)));}
- m*=ss(0.,.03,d);
+ else{float r=sqrt(d/PI)*mix(1.,1.388,d*d);m=ss(r+aa,r-aa,length(f*vec2(.72,1.39)));}
+ m=max(m,ss(.98,1.,d));m*=ss(0.,.03,d);
  return vec4(mix(p_paper,p_ink,m),1.);}`},
 {id:'cmyk',cat:'impreso',name:'Semitono CMYK',desc:'Cuatro tramas con ángulos de imprenta',
  params:[R('size','Tamaño de celda',3,60,8,.5,'px'),R('rot','Rotación',0,90,0,1,'°'),R('black','Generación de negro',0,1,.6,.01),R('gain','Ganancia de punto',-.3,.3,0,.01),C('paper','Papel','#f7f4ec')],
  glsl:`vec4 cmyk(vec3 c){float k=1.-max(c.r,max(c.g,c.b));float ik=max(1.-k,1e-4);return vec4((1.-c.r-k)/ik,(1.-c.g-k)/ik,(1.-c.b-k)/ik,k);}
+ float htR(float d){if(d<=PI*.25)return sqrt(d/PI);float lo=.5,hi=.70711;for(int i=0;i<16;i++){float r=(lo+hi)*.5;float c=PI*r*r-4.*(r*r*acos(.5/r)-.5*sqrt(r*r-.25));if(c<d)lo=r;else hi=r;}return (lo+hi)*.5;}
  float hdot(vec2 P,float ang,int ch,float s){vec2 q=rot(P,ang)/s;vec2 cell=floor(q)+.5;vec2 f=q-cell;vec2 cc=rot(cell*s,-ang)/u_res;
   vec4 v4=cmyk(Tc(cc));float k=v4.w*p_black;float v=ch==3?k:clamp(v4[ch]*(1.-k)+(v4.w-k),0.,1.);
-  v=clamp(v+p_gain,0.,1.);float r=sqrt(v/PI);float aa=1./s;return ss(r+aa,r-aa,length(f))*ss(0.,.03,v);}
+  v=clamp(v+p_gain,0.,1.);float r=htR(v);float aa=1./s;return max(ss(r+aa,r-aa,length(f)),ss(.98,1.,v))*ss(0.,.03,v);}
  vec4 fx(vec2 uv){float s=max(p_size*u_scale,2.);vec2 P=uv*u_res;float r0=radians(p_rot);vec3 col=p_paper;
   col*=mix(vec3(1.),vec3(0.,.63,.89),hdot(P,radians(15.)+r0,0,s));
   col*=mix(vec3(1.),vec3(.92,.05,.52),hdot(P,radians(75.)+r0,1,s));

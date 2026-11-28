@@ -522,23 +522,25 @@ const FILTERS=[
 /* ---------------- IMPRESO ---------------- */
 {id:'halftone',cat:'impreso',name:'Semitono',desc:'Trama de puntos, líneas o cruces con ángulo',
  params:[R('size','Tamaño de celda',2,80,10,.5,'px'),R('angle','Ángulo',0,180,45,1,'°'),S('shape','Forma',['Punto','Línea','Cruz','Cuadrado','Elipse']),R('gain','Ganancia de punto',-.5,.5,0,.01),C('ink','Tinta','#1a1a1a'),C('paper','Papel','#f2ede3'),B('invert','Invertir')],
- glsl:`vec4 fx(vec2 uv){float s=max(p_size*u_scale,1.5);vec2 P=uv*u_res;float a=radians(p_angle);
+ glsl:`float htR(float d){if(d<=PI*.25)return sqrt(d/PI);float lo=.5,hi=.70711;for(int i=0;i<16;i++){float r=(lo+hi)*.5;float c=PI*r*r-4.*(r*r*acos(.5/r)-.5*sqrt(r*r-.25));if(c<d)lo=r;else hi=r;}return (lo+hi)*.5;}
+ vec4 fx(vec2 uv){float s=max(p_size*u_scale,1.5);vec2 P=uv*u_res;float a=radians(p_angle);
  vec2 q=rot(P,a)/s;vec2 cell=floor(q)+.5;vec2 f=q-cell;vec2 cc=rot(cell*s,-a)/u_res;
  float d=1.-luma(Tc(cc));if(p_invert>.5)d=1.-d;d=clamp(d+p_gain,0.,1.);
  float aa=1.2/s;float m;int sh=int(p_shape+.5);
- if(sh==0){float r=sqrt(d/PI);m=ss(r+aa,r-aa,length(f));}
+ if(sh==0){float r=htR(d);m=ss(r+aa,r-aa,length(f));}
  else if(sh==1){float w=d*.5;m=ss(w+aa,w-aa,abs(f.y));}
  else if(sh==2){float w=(1.-sqrt(1.-d))*.5;m=ss(w+aa,w-aa,min(abs(f.x),abs(f.y)));}
  else if(sh==3){float h=sqrt(d)*.5;m=ss(h+aa,h-aa,max(abs(f.x),abs(f.y)));}
- else{float r=sqrt(d/PI);m=ss(r+aa,r-aa,length(f*vec2(.72,1.39)));}
- m*=ss(0.,.03,d);
+ else{float r=sqrt(d/PI)*mix(1.,1.388,d*d);m=ss(r+aa,r-aa,length(f*vec2(.72,1.39)));}
+ m=max(m,ss(.98,1.,d));m*=ss(0.,.03,d);
  return vec4(mix(p_paper,p_ink,m),1.);}`},
 {id:'cmyk',cat:'impreso',name:'Semitono CMYK',desc:'Cuatro tramas con ángulos de imprenta',
  params:[R('size','Tamaño de celda',3,60,8,.5,'px'),R('rot','Rotación',0,90,0,1,'°'),R('black','Generación de negro',0,1,.6,.01),R('gain','Ganancia de punto',-.3,.3,0,.01),C('paper','Papel','#f7f4ec')],
  glsl:`vec4 cmyk(vec3 c){float k=1.-max(c.r,max(c.g,c.b));float ik=max(1.-k,1e-4);return vec4((1.-c.r-k)/ik,(1.-c.g-k)/ik,(1.-c.b-k)/ik,k);}
+ float htR(float d){if(d<=PI*.25)return sqrt(d/PI);float lo=.5,hi=.70711;for(int i=0;i<16;i++){float r=(lo+hi)*.5;float c=PI*r*r-4.*(r*r*acos(.5/r)-.5*sqrt(r*r-.25));if(c<d)lo=r;else hi=r;}return (lo+hi)*.5;}
  float hdot(vec2 P,float ang,int ch,float s){vec2 q=rot(P,ang)/s;vec2 cell=floor(q)+.5;vec2 f=q-cell;vec2 cc=rot(cell*s,-ang)/u_res;
   vec4 v4=cmyk(Tc(cc));float k=v4.w*p_black;float v=ch==3?k:clamp(v4[ch]*(1.-k)+(v4.w-k),0.,1.);
-  v=clamp(v+p_gain,0.,1.);float r=sqrt(v/PI);float aa=1./s;return ss(r+aa,r-aa,length(f))*ss(0.,.03,v);}
+  v=clamp(v+p_gain,0.,1.);float r=htR(v);float aa=1./s;return max(ss(r+aa,r-aa,length(f)),ss(.98,1.,v))*ss(0.,.03,v);}
  vec4 fx(vec2 uv){float s=max(p_size*u_scale,2.);vec2 P=uv*u_res;float r0=radians(p_rot);vec3 col=p_paper;
   col*=mix(vec3(1.),vec3(0.,.63,.89),hdot(P,radians(15.)+r0,0,s));
   col*=mix(vec3(1.),vec3(.92,.05,.52),hdot(P,radians(75.)+r0,1,s));
@@ -2407,6 +2409,7 @@ function buildPSD(W,H,layers,merged){const enc=s=>{const a=[];for(const ch of s)
   if((2+recLen+chanBytes)%2)o++;u32(0);
   u16(0);[0,1,2].forEach(c=>{for(let i=0;i<plane;i++)out[o++]=merged[i*4+c];});return new Blob([out],{type:'image/vnd.adobe.photoshop'});}
 /* SVG del semitono: círculos o cuadrados vectoriales */
+function htRjs(d){if(d<=Math.PI/4)return Math.sqrt(d/Math.PI);let lo=.5,hi=.70711;for(let i=0;i<20;i++){const r=(lo+hi)/2,c=Math.PI*r*r-4*(r*r*Math.acos(.5/r)-.5*Math.sqrt(r*r-.25));if(c<d)lo=r;else hi=r;}return d>.98?.7072+.01:(lo+hi)/2;}
 function halftoneSVG(n,W,H){const P=n.params;const e=edgeInto(n.uid,'in');if(!e)throw new Error('El semitono no tiene entrada');const doc=nodeDom(n.uid);const sc=W/doc.w;
   const src=nodePixels(e.from,W,H);const s=Math.max(+P.size*sc,1.5),a=+P.angle*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a);const sh=Math.round(+P.shape);
   const rotf=(x,y,t)=>[Math.cos(t)*x-Math.sin(t)*y,Math.sin(t)*x+Math.cos(t)*y];
@@ -2415,8 +2418,8 @@ function halftoneSVG(n,W,H){const P=n.params;const e=edgeInto(n.uid,'in');if(!e)
   for(let j=Math.floor(qy0)-1;j<=Math.ceil(qy1);j++)for(let i=Math.floor(qx0)-1;i<=Math.ceil(qx1);i++){const c=rotf((i+.5)*s,(j+.5)*s,-a);const x=c[0],yg=c[1];if(x<-s||yg<-s||x>W+s||yg>H+s)continue;
     const px=Math.min(W-1,Math.max(0,Math.round(x))),py=Math.min(H-1,Math.max(0,Math.round(H-1-yg)));const k=(py*W+px)*4;let d=1-(src[k]*.2126+src[k+1]*.7152+src[k+2]*.0722)/255;
     if(+P.invert)d=1-d;d=Math.min(1,Math.max(0,d+ +P.gain));if(d<.004)continue;const y=H-yg;
-    if(sh===3){const side=Math.sqrt(d)*s;parts.push(`<rect x="${f(-side/2)}" y="${f(-side/2)}" width="${f(side)}" height="${f(side)}" transform="translate(${f(x)} ${f(y)}) rotate(${f(-+P.angle)})"/>`);}
-    else{const r=Math.sqrt(d/Math.PI)*s;parts.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}"/>`);}}
+    if(sh===3){const side=Math.sqrt(d)*s+(d>.98?.6:0);parts.push(`<rect x="${f(-side/2)}" y="${f(-side/2)}" width="${f(side)}" height="${f(side)}" transform="translate(${f(x)} ${f(y)}) rotate(${f(-+P.angle)})"/>`);}
+    else{const r=htRjs(d)*s;parts.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}"/>`);}}
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><rect width="100%" height="100%" fill="${P.paper}"/><g fill="${P.ink}">${parts.join('')}</g></svg>`;
   return new Blob([svg],{type:'image/svg+xml'});}
 function baseName(){const p=primaryImageNode();return (p&&images.get(p.uid)&&images.get(p.uid).name)||'imagen';}
